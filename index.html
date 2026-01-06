@@ -17,7 +17,7 @@
 <header class="hdr">
   <div class="hdr-top">
     <span class="appTitle">VAJAGMAN BETA © Gints Suipe</span>
-    <span class="appVer">—</span>
+    <span class="appVer">v2.0.2 · 2026-01-06</span>
   </div>
   <div class="hdr-tabs">
     <button class="tab active" data-tab="record">IERAKSTS</button>
@@ -50,7 +50,7 @@
         <!-- Address BEFORE mini map -->
         <div class="field addressStandalone" data-key="ADRESE_LOKACIJA">
           <label for="ADRESE_LOKACIJA">ADRESE/LOKĀCIJA</label>
-          <textarea id="ADRESE_LOKACIJA" class="input autogrow" rows="1"></textarea>
+          <textarea id="ADRESE_LOKACIJA" class="input autogrow" / rows="1"></textarea>
         </div>
 
         <div class="miniMapWrap">
@@ -72,7 +72,7 @@
 
           <label class="toggle">
             <input type="checkbox" id="autoOpenToggle" />
-            <span>Auto-atvērt tuvāko (≤ <textarea id="autoRadius" class="radius input autogrow" min="20" step="10" value="80" rows="1"></textarea> m)</span>
+            <span>Auto-atvērt tuvāko (≤ <input id="autoRadius" class="radius" type="number" min="20" step="10" value="80"> m)</span>
           </label>
 
           <span id="mapStatus" class="mapStatus">Gatavs.</span>
@@ -82,11 +82,11 @@
 
       <section class="panel hidden" id="tab-catalog">
         <div class="catalogTop">
-          <textarea id="search" class="input autogrow" placeholder="Meklēt pēc adreses / objekta nr..." rows="1"></textarea>
+          <input id="search" class="input" placeholder="Meklēt pēc adreses / objekta nr..." />
           <button id="btnExport" class="btn">Eksports JSON</button>
         </div>
         <div id="listRoot" class="list"></div>
-        <textarea id="exportBox" class="export hidden autogrow input" readonly rows="1"></textarea>
+        <textarea id="exportBox" class="export hidden autogrow" readonly rows="1"></textarea>
       </section>
     </main>
   </div>

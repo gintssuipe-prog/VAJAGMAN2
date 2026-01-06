@@ -1,5 +1,5 @@
 
-const APP_VERSION = "v2.0.1";
+const APP_VERSION = "v2.0.2";
 const APP_DATE = "2026-01-06";
 
 const STORAGE_KEY_OBJECTS = "vajagman_objects_v3";
@@ -9,21 +9,31 @@ const STORAGE_KEY_AUTORADIUS = "vajagman_auto_open_radius_v3";
 const STORAGE_KEY_ADDR_SYSTEM = "vajagman_addr_system_ids_v3";
 const AUTO_COOLDOWN_MS = 15000;
 
+// Geocoding language control (avoid browser UI language affecting results).
+const STORAGE_KEY_GEO_LANG = "vajagman_geo_lang_v1";
+function getGeoLang(){
+  const v = (localStorage.getItem(STORAGE_KEY_GEO_LANG) || "lv").trim();
+  // allow values like "lv", "lv-LV", "en", "en-US"
+  return v || "lv";
+}
+
+
 // Fields: address is handled separately (rendered above mini map), but still stored in object.
 const schema = [
+  { key: "ADRESES_LOKACIJAS_PIEZIMES", label: "ADRESES/LOKĀCIJAS PIEZĪMES", type: "textarea" },
   { key: "DURVJU_KODS_PIEKLUVE", label: "DURVJU KODS/PIEKĻUVE", type: "textarea" },
-  { key: "PIEKLUVES_KONTAKTI", label: "PIEKĻUVES KONTAKTI", type: "textarea" },
-  { key: "PANELIS_MARKA", label: "PANELIS MARKA", type: "textarea" },
-  { key: "PAROLE1", label: "PAROLE1", type: "textarea" },
-  { key: "PAROLE2", label: "PAROLE2", type: "textarea" },
-  { key: "PAROLE3", label: "PAROLE3", type: "textarea" },
-  { key: "REMOTEPAROLE", label: "REMOTEPAROLE", type: "textarea" },
-  { key: "OBJEKTA_NR", label: "OBJEKTA NR", type: "textarea" },
+  { key: "PIEKLUVES_KONTAKTI", label: "PIEKĻUVES KONTAKTI", type: "text" },
+  { key: "PANELIS_MARKA", label: "PANELIS MARKA", type: "text" },
+  { key: "PAROLE1", label: "PAROLE1", type: "text" },
+  { key: "PAROLE2", label: "PAROLE2", type: "text" },
+  { key: "PAROLE3", label: "PAROLE3", type: "text" },
+  { key: "REMOTEPAROLE", label: "REMOTEPAROLE", type: "text" },
+  { key: "OBJEKTA_NR", label: "OBJEKTA NR", type: "text" },
   { key: "PIEZIMES1", label: "PIEZĪMES1", type: "textarea" },
   { key: "PIEZIMES2", label: "PIEZĪMES2", type: "textarea" },
-  { key: "KONFIGURACIJA", label: "KONFIGURĀCIJA", type: "textarea" },
-  { key: "LAT", label: "LAT (koordinātes)", type: "textarea" },
-  { key: "LNG", label: "LNG (koordinātes)", type: "textarea" },
+  { key: "KONFIGURACIJA", label: "KONFIGURĀCIJA", type: "text" },
+  { key: "LAT", label: "LAT (koordinātes)", type: "text" },
+  { key: "LNG", label: "LNG (koordinātes)", type: "text" },
 ];
 
 function $(id){ return document.getElementById(id); }
@@ -49,7 +59,6 @@ function setMapStatus(msg){ $("mapStatus").textContent = msg; }
 let objects = [];
 let currentId = null;
 let working = null;          // working copy (may be new)
-let baseline = null; // snapshot of last-saved state for dirty comparison
 let workingIsNew = false;
 let dirtyFields = new Set(); // keys changed (incl. ADRESE_LOKACIJA)
 let addrSystemIds = new Set();
@@ -109,7 +118,7 @@ function applySystemAddressStyle(){
 // - for NEW: also disabled if all fields empty (avoid empty record)
 function hasMeaningfulData(obj){
   if (!obj) return false;
-  const keys = ["ADRESE_LOKACIJA","DURVJU_KODS_PIEKLUVE","PIEKLUVES_KONTAKTI","PANELIS_MARKA","PAROLE1","PAROLE2","PAROLE3","REMOTEPAROLE","OBJEKTA_NR","PIEZIMES1","PIEZIMES2","KONFIGURACIJA","LAT","LNG"];
+  const keys = ["ADRESE_LOKACIJA","ADRESES_LOKACIJAS_PIEZIMES","DURVJU_KODS_PIEKLUVE","PIEKLUVES_KONTAKTI","PANELIS_MARKA","PAROLE1","PAROLE2","PAROLE3","REMOTEPAROLE","OBJEKTA_NR","PIEZIMES1","PIEZIMES2","KONFIGURACIJA","LAT","LNG"];
   return keys.some(k => String(obj[k] || "").trim().length > 0);
 }
 
@@ -147,41 +156,19 @@ function refreshSaveButton(){
   if (isDirty) setStatus("Nesaglabātas izmaiņas — nospied SAGLABĀT.", true);
 }
 
-
-function setFieldDirty(key, isDirty){
-  const wrap = document.querySelector(`.field[data-key="${CSS.escape(key)}"]`);
-  const input = document.getElementById(key);
-  if (isDirty){
-    dirtyFields.add(key);
-    if (wrap) wrap.classList.add("dirty");
-    if (input) input.classList.add("is-dirty");
-  } else {
-    dirtyFields.delete(key);
-    if (wrap) wrap.classList.remove("dirty");
-    if (input) input.classList.remove("is-dirty");
-  }
-  refreshSaveButton();
-}
-
-function syncDirtyForKey(key){
-  if (!working) return;
-  const cur = String(working[key] ?? "");
-  const base = baseline ? String(baseline[key] ?? "") : "";
-  setFieldDirty(key, cur !== base);
-}
-
 function markDirty(key){
-  // Backward compatible wrapper: recompute based on baseline
-  syncDirtyForKey(key);
+  dirtyFields.add(key);
+  // mark field wrapper dirty
+  const wrap = document.querySelector(`.field[data-key="${CSS.escape(key)}"]`);
+  if (wrap) wrap.classList.add("dirty");
+  refreshSaveButton();
 }
 
 function clearDirtyUI(){
   document.querySelectorAll(".field.dirty").forEach(el => el.classList.remove("dirty"));
-  document.querySelectorAll(".is-dirty").forEach(el => el.classList.remove("is-dirty"));
   dirtyFields.clear();
   refreshSaveButton();
 }
-
 
 function blankObject(){
   const o = { id: uid(), ADRESE_LOKACIJA: "" };
@@ -189,21 +176,17 @@ function blankObject(){
   return o;
 }
 
-
 function setWorking(o, isNew){
   working = o;
   workingIsNew = !!isNew;
+  dirtyFields.clear();
 
-  // Snapshot for dirty comparison (treat current state as "saved")
-  try{
-    baseline = JSON.parse(JSON.stringify(working));
-  }catch(e){
-    baseline = null;
-  }
+  // address input
+  $("ADRESE_LOKACIJA").value = String(working.ADRESE_LOKACIJA || "");
+  // clear dirty state on address field wrapper
+  document.querySelector('.field.addressStandalone')?.classList.remove("dirty");
 
-  // Render record form
   buildForm($("formRoot"), working);
-  try{ clearDirtyUI(); }catch(e){}
   applySystemAddressStyle();
   updateCtxTitle();
 
@@ -212,7 +195,6 @@ function setWorking(o, isNew){
   refreshSaveButton();
   updateMiniMap();
 }
-
 
 function discardUnsavedChangesIfNeeded(){
   if (dirtyFields.size === 0) return;
@@ -278,7 +260,6 @@ function saveWorking(){
     saveAddrSystemIds();
   }
 
-  try{ baseline = JSON.parse(JSON.stringify(working)); }catch(e){ baseline = null; }
   clearDirtyUI();
   updateCtxTitle(); // title appears/updates ONLY after save
   refreshCatalog();
@@ -300,7 +281,6 @@ function createNewRecord(){
 
 function buildForm(root, obj){
   root.innerHTML = "";
-
   for (const f of schema){
     const wrap = document.createElement("div");
     wrap.className = "field";
@@ -310,97 +290,34 @@ function buildForm(root, obj){
     label.textContent = f.label;
     label.htmlFor = f.key;
 
-    // VAJAGMAN v2: one input type across the app = textarea (with autogrow)
-    const input = document.createElement("textarea");
+    let input;
+    if (f.type === "textarea") input = document.createElement("textarea");
+    else { input = document.createElement("input"); input.type = "text"; }
+
     input.id = f.key;
-    input.className = "input autogrow";
-    input.rows = 1;
-    input.spellcheck = false;
-
-    // Field-specific behavior
-    if (f.key === "PIEKLUVES_KONTAKTI"){
-      // Digits only, max 15
-      input.inputMode = "numeric";
-      input.autocomplete = "tel";
-      input.placeholder = "tālrunis (tikai cipari)";
-    }
-
-    input.value = String((obj && obj[f.key] != null) ? obj[f.key] : "");
-
-    // Row layout (optional call button)
-    let row = null;
-    let callBtn = null;
-    if (f.key === "PIEKLUVES_KONTAKTI"){
-      row = document.createElement("div");
-      row.className = "fieldRow";
-
-      callBtn = document.createElement("button");
-      callBtn.type = "button";
-      callBtn.className = "btn call";
-      callBtn.textContent = "ZVANS";
-      callBtn.disabled = true;
-
-      callBtn.addEventListener("click", () => {
-        const num = String(input.value || "").trim();
-        if (!num) return;
-        // Use tel: scheme (mobile will open dialer)
-        window.location.href = "tel:" + num;
-      });
-
-      row.appendChild(input);
-      row.appendChild(callBtn);
-    }
+    input.classList.add("input");
+    if (input.tagName === "TEXTAREA") input.classList.add("autogrow");
+    input.value = obj?.[f.key] ?? "";
 
     input.addEventListener("input", () => {
       if (!working) return;
-
-      if (f.key === "PIEKLUVES_KONTAKTI"){
-        const cleaned = String(input.value || "").replace(/\D+/g, "").slice(0, 15);
-        if (cleaned !== input.value) input.value = cleaned;
-        if (callBtn) callBtn.disabled = cleaned.length === 0;
-      }
-
       working[f.key] = input.value;
-      syncDirtyForKey(f.key);
+      markDirty(f.key);
+      // NOTE: header title does NOT live-update; it updates after save (discipline)
     });
 
     wrap.appendChild(label);
-    if (row) wrap.appendChild(row);
-    else wrap.appendChild(input);
-
+    wrap.appendChild(input);
     root.appendChild(wrap);
   }
-
-  // Ensure autogrow applies to the newly created fields immediately
-  try{ wireAutoGrow(); }catch(e){}
-}
-
-
-function focusField(id){
-  const el = document.getElementById(id);
-  if (!el) return;
-  try{
-    // keep UX stable on mobile: bring field back into view + restore focus
-    setTimeout(() => {
-      try{ el.focus({ preventScroll: true }); }catch(e){ try{ el.focus(); }catch(e2){} }
-      try{
-        const v = String(el.value || "");
-        el.setSelectionRange(v.length, v.length);
-      }catch(e){}
-      try{ el.scrollIntoView({ block: "center", behavior: "smooth" }); }catch(e){}
-    }, 50);
-  }catch(e){}
 }
 
 // Address input (special)
-
 function wireAddressInput(){
   const inp = $("ADRESE_LOKACIJA");
-  if (!inp) return;
   inp.addEventListener("input", () => {
     if (!working) return;
     working.ADRESE_LOKACIJA = inp.value;
-
     // if user edits manually, drop system marker
     if (workingIsNew){
       working.__addrSystem = false;
@@ -410,16 +327,18 @@ function wireAddressInput(){
     }
     applySystemAddressStyle();
 
-    syncDirtyForKey("ADRESE_LOKACIJA");
+    // mark dirty UI on wrapper
+    document.querySelector('.field.addressStandalone')?.classList.add("dirty");
+    markDirty("ADRESE_LOKACIJA");
   });
 }
-
 
 // Geocoding (Nominatim)
 async function geocodeAddress(address){
   const q = encodeURIComponent(address || "");
-  const url = `https://nominatim.openstreetmap.org/search?format=json&q=${q}&limit=1&accept-language=${encodeURIComponent(getGeoLang())}`;
-  const res = await geoFetch(url);
+  const lang = getGeoLang();
+  const url = `https://nominatim.openstreetmap.org/search?format=json&q=${q}&limit=1&accept-language=${encodeURIComponent(lang)}`;
+  const res = await fetch(url, { headers: { "Accept": "application/json", "Accept-Language": lang } });
   if (!res.ok) throw new Error("Geocoding kļūda: " + res.status);
   const arr = await res.json();
   if (!arr?.length) return null;
@@ -427,8 +346,9 @@ async function geocodeAddress(address){
 }
 
 async function reverseGeocode(lat, lng){
-  const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lng)}&zoom=18&addressdetails=1&accept-language=${encodeURIComponent(getGeoLang())}`;
-  const res = await geoFetch(url);
+  const lang = getGeoLang();
+  const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lng)}&zoom=18&addressdetails=1&accept-language=${encodeURIComponent(lang)}`;
+  const res = await fetch(url, { headers: { "Accept": "application/json", "Accept-Language": lang } });
   if (!res.ok) throw new Error("Reverse geocoding kļūda: " + res.status);
   const data = await res.json();
   const a = data && data.address ? data.address : {};
@@ -458,12 +378,15 @@ async function fillFromGPS(){
     let pretty = "";
     try { pretty = await reverseGeocode(me.lat, me.lng); } catch {}
     if (pretty){
-      working.ADRESE_LOKACIJA = pretty;
+      working.ADRESE_LOKACIJA = pretty.toUpperCase();
       $("ADRESE_LOKACIJA").value = working.ADRESE_LOKACIJA;
 
       if (workingIsNew) working.__addrSystem = true;
       else if (currentId) { addrSystemIds.add(currentId); saveAddrSystemIds(); }
-      applySystemAddressStyle();      markDirty("ADRESE_LOKACIJA");
+      applySystemAddressStyle();
+
+      document.querySelector('.field.addressStandalone')?.classList.add("dirty");
+      markDirty("ADRESE_LOKACIJA");
     }
 
     markDirty("LAT");
@@ -472,7 +395,6 @@ async function fillFromGPS(){
     refreshMarkers();
     updateMiniMap();
     setStatus("GPS: adrese + koordinātes ieliktas. Nospied SAGLABĀT.", true);
-    focusField("ADRESE_LOKACIJA");
   }catch{
     setStatus("GPS: neizdevās (atļaujas / GPS / internets).", true);
   }
@@ -498,7 +420,7 @@ async function validateAddress(){
     let pretty = "";
     try { pretty = await reverseGeocode(geo.lat, geo.lng); } catch {}
     const finalAddr = (pretty || address).trim();
-    working.ADRESE_LOKACIJA = finalAddr;
+    working.ADRESE_LOKACIJA = finalAddr.toUpperCase();
     $("ADRESE_LOKACIJA").value = working.ADRESE_LOKACIJA;
 
     // mark system
@@ -513,12 +435,13 @@ async function validateAddress(){
 
     markDirty("LAT");
     markDirty("LNG");
-    // Address is changed by system: still dirty until user saves    markDirty("ADRESE_LOKACIJA");
+    // Address is changed by system: still dirty until user saves
+    document.querySelector('.field.addressStandalone')?.classList.add("dirty");
+    markDirty("ADRESE_LOKACIJA");
 
     refreshMarkers();
     updateMiniMap();
     setStatus("Adreses validācija pabeigta + koordinātes ieliktas. Nospied SAGLABĀT.", true);
-    focusField("ADRESE_LOKACIJA");
   } catch {
     setStatus("Adreses validācija neizdevās (internets / serviss).", true);
   }
@@ -617,7 +540,9 @@ function escapeHtml(s){ return String(s).replace(/[&<>"']/g, (c) => ({"&":"&amp;
 function objectPopupHtml(o){
   const title = titleFromRecord(o);
   const lines = [
-    `<div style="font-weight:900;margin-bottom:6px;">${escapeHtml(title)}</div>`,    o.DURVJU_KODS_PIEKLUVE ? `<div><b>Kods:</b> ${escapeHtml(o.DURVJU_KODS_PIEKLUVE)}</div>` : "",
+    `<div style="font-weight:900;margin-bottom:6px;">${escapeHtml(title)}</div>`,
+    o.ADRESES_LOKACIJAS_PIEZIMES ? `<div><b>Piezīmes:</b> ${escapeHtml(o.ADRESES_LOKACIJAS_PIEZIMES)}</div>` : "",
+    o.DURVJU_KODS_PIEKLUVE ? `<div><b>Kods:</b> ${escapeHtml(o.DURVJU_KODS_PIEKLUVE)}</div>` : "",
     o.PIEKLUVES_KONTAKTI ? `<div><b>Kontakti:</b> ${escapeHtml(o.PIEKLUVES_KONTAKTI)}</div>` : "",
     `<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">` +
       `<button data-open="${o.id}" style="padding:6px 10px;border-radius:10px;border:1px solid #1f2a44;background:#1e293b;color:#e2e8f0;font-weight:800;">Atvērt</button>` +
@@ -844,10 +769,6 @@ async function registerSW(){
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  // Version shown in header (single source of truth)
-  const verEl = document.querySelector(".appVer");
-  if (verEl) verEl.textContent = `${APP_VERSION} · ${APP_DATE}`;
-
   objects = loadObjects();
   addrSystemIds = loadAddrSystemIds();
   currentId = loadCurrentId();
@@ -914,7 +835,7 @@ function updateSubHeaders(){
 
 function autoGrow(el){
   if(!el) return;
-  const min = 44;
+  const min = 48;
   el.style.height = "auto";
   const h = Math.max(min, el.scrollHeight);
   el.style.height = h + "px";
@@ -931,41 +852,3 @@ wireAutoGrow();
 document.addEventListener('DOMContentLoaded', ()=>{
   if (typeof wireAutoGrow === 'function') wireAutoGrow();
 });
-
-
-// v2.0.0 - ensure autogrow is wired after any render that recreates DOM
-(function(){
-  if(typeof wireAutoGrow !== 'function') return;
-  const wrap = (fn)=>{
-    if(typeof fn !== 'function') return fn;
-    return function(){
-      const r = fn.apply(this, arguments);
-      try{ wireAutoGrow(); }catch(e){}
-      return r;
-    }
-  };
-  if(typeof renderRecordView === 'function') renderRecordView = wrap(renderRecordView);
-  if(typeof renderMapView === 'function') renderMapView = wrap(renderMapView);
-  if(typeof renderCatalogView === 'function') renderCatalogView = wrap(renderCatalogView);
-})();
-
-// Language for geocoding/reverse-geocoding (do NOT depend on browser UI language)
-// Stored in localStorage as "vm_lang". Default: "lv" (Latviešu).
-function getGeoLang(){
-  try{
-    const v = String(localStorage.getItem("vm_lang") || "").trim().toLowerCase();
-    if (v) return v;
-  }catch(e){}
-  return "lv";
-}
-function geoFetch(url){
-  const lang = getGeoLang();
-  return fetch(url, {
-    headers: {
-      "Accept": "application/json",
-      "Accept-Language": `${lang},lv;q=0.9,en;q=0.7`
-    }
-  });
-}
-
-

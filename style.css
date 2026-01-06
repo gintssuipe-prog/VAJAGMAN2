@@ -11,7 +11,7 @@
   --danger:#b91c1c;
   --field:#dbeafe;
   --fieldText:#0b1220;
-  --dirty:#ff4fa3;
+  --dirty:#ef4444;
 }
 
 *{ box-sizing:border-box; }
@@ -67,7 +67,7 @@ body{
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  
+  text-transform: uppercase;
 }
 
 .tabs{ display:flex; gap:8px; margin-top: 10px; }
@@ -125,19 +125,6 @@ body{
 .form{ margin-top: 12px; }
 
 .field{ margin-bottom: 12px; }
-
-.fieldRow{
-  display:flex;
-  gap:10px;
-  align-items:stretch;
-}
-.fieldRow .input{
-  flex: 1 1 auto;
-}
-.btn.call{
-  flex: 0 0 auto;
-  padding: 10px 12px;
-}
 .field label{
   display:block;
   font-size: 12px;
@@ -145,28 +132,27 @@ body{
   letter-spacing: .9px;
   margin-bottom: 6px;
   color: var(--text);
-  
+  text-transform: uppercase;
 }
 .field input, .field textarea{
   width: 100%;
   border-radius: 12px;
   border: 2px solid rgba(255,255,255,0.08);
-  padding: 9px 12px;
-  line-height: 18px;
+  padding: 12px 12px;
   background: var(--field);
   color: var(--fieldText);
   font-size: 16px;
   outline: none;
 }
-
-.field textarea{ min-height: 40px; resize: none; }
+.field textarea{ min-height: 48px; resize: none; overflow:hidden; }
 
 /* Dirty fields */
 .field.dirty label{ color: var(--dirty); }
-.field.dirty input, .field.dirty textarea, textarea.is-dirty{ border-color: rgba(255,79,163,0.85); }
+.field.dirty input, .field.dirty textarea{ border-color: rgba(239,68,68,0.7); }
 
 /* System-validated address visual */
-.field.system input{
+.field.system input, .field.system textarea{
+  text-transform: uppercase;
   font-weight: 500;
   letter-spacing: .2px;
 }
@@ -176,9 +162,8 @@ body{
   background: transparent;
   border: none;
   border-radius: 16px;
-  overflow: hidden;
-  width: calc(100% - 18px);
-  margin: 0 auto 12px;
+  overflow:hidden;
+  margin-bottom: 12px;
 }
 .miniMapHdr{
   display:flex;
@@ -239,7 +224,7 @@ body{
   padding: 10px 10px;
 }
 .itemTop{ display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
-.itemTitle{ font-weight: 950;  letter-spacing: .6px; }
+.itemTitle{ font-weight: 950; text-transform: uppercase; letter-spacing: .6px; }
 .itemMeta{ margin-top: 4px; font-size: 12px; color: var(--muted); }
 .itemBtns{ display:flex; gap:8px; flex-wrap:wrap; margin-top: 10px; }
 
@@ -365,27 +350,4 @@ textarea.autogrow{
   overflow: hidden;
   white-space: pre-wrap;
   word-break: break-word;
-}
-
-/* v1.3.0 - standardized input control: everything is textarea (single-line start, autogrow) */
-textarea.input{
-  width: 100%;
-  box-sizing: border-box;
-  border-radius: 14px;
-  border: 2px solid rgba(255,120,120,.85);
-  background: rgba(225,240,255,.95);
-  color: #09101a;
-  padding: 12px 14px;
-  font-size: 16px;
-  line-height: 1.25;
-  resize: none;
-  overflow: hidden;
-  white-space: pre-wrap;
-  word-break: break-word;
-  min-height: 48px;
-  height: 48px;
-}
-textarea.input:focus{
-  outline: none;
-  border-color: rgba(255,170,120,.95);
 }
