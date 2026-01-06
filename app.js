@@ -1,5 +1,5 @@
 
-const APP_VERSION = "v2.1.1";
+const APP_VERSION = "v2.1.2";
 const APP_DATE = "2026-01-06";
 
 
@@ -359,7 +359,7 @@ function buildForm(root, obj){
 
       const nameLbl = document.createElement("div");
       nameLbl.className = "inlineLabel";
-      nameLbl.textContent = "Vārds";
+      nameLbl.textContent = "VĀRDS";
 
       const nameInput = document.createElement("textarea");
       nameInput.id = "VARDS";
@@ -991,7 +991,9 @@ function updateSubHeaders(){
 
 function autoGrow(el){
   if(!el) return;
-  const min = 22;
+  const rootStyle = getComputedStyle(document.documentElement);
+  const minFromCss = parseInt(rootStyle.getPropertyValue('--control-h')) || 36;
+  const min = minFromCss;
   el.style.height = "auto";
   const h = Math.max(min, el.scrollHeight);
   el.style.height = h + "px";

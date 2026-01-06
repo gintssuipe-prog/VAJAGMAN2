@@ -100,9 +100,16 @@ body{
   border:1px solid rgba(255,255,255,0.12);
   background: var(--btn);
   color: var(--text);
-  padding: 10px 12px;
+  height: var(--control-h);
+  padding: 0 12px;
   border-radius: 12px;
   font-weight: 900;
+  font-size: 15px;
+  line-height: var(--control-line);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
 }
 .btn.primary{ background: var(--btnBlue); border-color: transparent; }
 .btn.success{ background: var(--btnGreen); border-color: transparent; }
@@ -115,11 +122,16 @@ body{
 .input{
   width:100%;
   border-radius: 12px;
-  border: 1px solid rgba(255,255,255,0.12);
-  padding: 10px 10px;
-  background: #0b1a3a;
-  color: var(--text);
-  font-size: 15px;
+  border: 2px solid rgba(255,255,255,0.10);
+  height: var(--control-h);
+  min-height: var(--control-h);
+  padding: var(--control-py) 10px;
+  background: var(--field);
+  color: var(--fieldText);
+  font-size: 16px;
+  line-height: var(--control-line);
+  outline: none;
+  box-sizing: border-box;
 }
 
 .form{ margin-top: 12px; }
@@ -138,19 +150,7 @@ body{
   color: var(--text);
   text-transform: uppercase;
 }
-.field input, .field textarea{
-  width:100%;
-  border-radius: 12px;
-  border: 2px solid rgba(255,255,255,0.10);
-  padding: 6px 10px;           /* slightly slimmer than header buttons */
-  min-height: 32px;            /* slimmer than buttons, but not flat */
-  background: var(--field);
-  color: var(--fieldText);
-  font-size: 16px;
-  line-height: 16px;
-  outline: none;
-  box-sizing: border-box;
-}
+.field input, .field textarea{ resize: none; overflow:hidden; }
 .field textarea{ min-height: 22px; resize: none; overflow:hidden; }
 
 /* Dirty fields */
