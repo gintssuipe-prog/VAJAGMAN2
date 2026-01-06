@@ -1,5 +1,5 @@
 
-const APP_VERSION = "v2.0.2";
+const APP_VERSION = "v2.0.3";
 const APP_DATE = "2026-01-06";
 
 const STORAGE_KEY_OBJECTS = "vajagman_objects_v3";
@@ -20,20 +20,19 @@ function getGeoLang(){
 
 // Fields: address is handled separately (rendered above mini map), but still stored in object.
 const schema = [
-  { key: "ADRESES_LOKACIJAS_PIEZIMES", label: "ADRESES/LOKĀCIJAS PIEZĪMES", type: "textarea" },
   { key: "DURVJU_KODS_PIEKLUVE", label: "DURVJU KODS/PIEKĻUVE", type: "textarea" },
-  { key: "PIEKLUVES_KONTAKTI", label: "PIEKĻUVES KONTAKTI", type: "text" },
-  { key: "PANELIS_MARKA", label: "PANELIS MARKA", type: "text" },
-  { key: "PAROLE1", label: "PAROLE1", type: "text" },
-  { key: "PAROLE2", label: "PAROLE2", type: "text" },
-  { key: "PAROLE3", label: "PAROLE3", type: "text" },
-  { key: "REMOTEPAROLE", label: "REMOTEPAROLE", type: "text" },
-  { key: "OBJEKTA_NR", label: "OBJEKTA NR", type: "text" },
+  { key: "PIEKLUVES_KONTAKTI", label: "PIEKĻUVES KONTAKTI", type: "textarea" },
+  { key: "PANELIS_MARKA", label: "PANELIS MARKA", type: "textarea" },
+  { key: "PAROLE1", label: "PAROLE1", type: "textarea" },
+  { key: "PAROLE2", label: "PAROLE2", type: "textarea" },
+  { key: "PAROLE3", label: "PAROLE3", type: "textarea" },
+  { key: "REMOTEPAROLE", label: "REMOTEPAROLE", type: "textarea" },
+  { key: "OBJEKTA_NR", label: "OBJEKTA NR", type: "textarea" },
   { key: "PIEZIMES1", label: "PIEZĪMES1", type: "textarea" },
   { key: "PIEZIMES2", label: "PIEZĪMES2", type: "textarea" },
-  { key: "KONFIGURACIJA", label: "KONFIGURĀCIJA", type: "text" },
-  { key: "LAT", label: "LAT (koordinātes)", type: "text" },
-  { key: "LNG", label: "LNG (koordinātes)", type: "text" },
+  { key: "KONFIGURACIJA", label: "KONFIGURĀCIJA", type: "textarea" },
+  { key: "LAT", label: "LAT (koordinātes)", type: "textarea" },
+  { key: "LNG", label: "LNG (koordinātes)", type: "textarea" },
 ];
 
 function $(id){ return document.getElementById(id); }
@@ -281,6 +280,7 @@ function createNewRecord(){
 
 function buildForm(root, obj){
   root.innerHTML = "";
+
   for (const f of schema){
     const wrap = document.createElement("div");
     wrap.className = "field";
@@ -290,26 +290,69 @@ function buildForm(root, obj){
     label.textContent = f.label;
     label.htmlFor = f.key;
 
-    let input;
-    if (f.type === "textarea") input = document.createElement("textarea");
-    else { input = document.createElement("input"); input.type = "text"; }
-
+    // VAJAGMAN v2: one input type across the app = textarea (with autogrow)
+    const input = document.createElement("textarea");
     input.id = f.key;
-    input.classList.add("input");
-    if (input.tagName === "TEXTAREA") input.classList.add("autogrow");
-    input.value = obj?.[f.key] ?? "";
+    input.className = "input autogrow";
+    input.rows = 1;
+    input.spellcheck = false;
+
+    // Field-specific behavior
+    if (f.key === "PIEKLUVES_KONTAKTI"){
+      // Digits only, max 15
+      input.inputMode = "numeric";
+      input.autocomplete = "tel";
+      input.placeholder = "tālrunis (tikai cipari)";
+    }
+
+    input.value = String((obj && obj[f.key] != null) ? obj[f.key] : "");
+
+    // Row layout (optional call button)
+    let row = null;
+    let callBtn = null;
+    if (f.key === "PIEKLUVES_KONTAKTI"){
+      row = document.createElement("div");
+      row.className = "fieldRow";
+
+      callBtn = document.createElement("button");
+      callBtn.type = "button";
+      callBtn.className = "btn call";
+      callBtn.textContent = "ZVANS";
+      callBtn.disabled = true;
+
+      callBtn.addEventListener("click", () => {
+        const num = String(input.value || "").trim();
+        if (!num) return;
+        // Use tel: scheme (mobile will open dialer)
+        window.location.href = "tel:" + num;
+      });
+
+      row.appendChild(input);
+      row.appendChild(callBtn);
+    }
 
     input.addEventListener("input", () => {
       if (!working) return;
+
+      if (f.key === "PIEKLUVES_KONTAKTI"){
+        const cleaned = String(input.value || "").replace(/\D+/g, "").slice(0, 15);
+        if (cleaned !== input.value) input.value = cleaned;
+        if (callBtn) callBtn.disabled = cleaned.length === 0;
+      }
+
       working[f.key] = input.value;
-      markDirty(f.key);
-      // NOTE: header title does NOT live-update; it updates after save (discipline)
+      syncDirtyForKey(f.key);
     });
 
     wrap.appendChild(label);
-    wrap.appendChild(input);
+    if (row) wrap.appendChild(row);
+    else wrap.appendChild(input);
+
     root.appendChild(wrap);
   }
+
+  // Ensure autogrow applies to the newly created fields immediately
+  try{ wireAutoGrow(); }catch(e){}
 }
 
 // Address input (special)
