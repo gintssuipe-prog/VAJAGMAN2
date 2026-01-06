@@ -1,5 +1,5 @@
 
-const APP_VERSION = "v2.0.6";
+const APP_VERSION = "v2.0.7";
 const APP_DATE = "2026-01-06";
 
 const STORAGE_KEY_OBJECTS = "vajagman_objects_v3";
@@ -415,7 +415,7 @@ async function geocodeAddress(address){
   if (!res.ok) throw new Error("Geocoding kļūda: " + res.status);
   const arr = await res.json();
   if (!arr?.length) return null;
-  return { lat: Number(arr[0].lat), lng: Number(arr[0].lon) };
+  return { lat: Number(arr[0].lat), lng: Number(arr[0].lon), pretty: String(arr[0].display_name || "") };
 }
 
 async function reverseGeocode(lat, lng){
@@ -537,7 +537,8 @@ async function validateAddress(){
     if (elLng) elLng.value = working.LNG;
 
     // Canonicalize address display to ALL CAPS (stable expectation)
-    working.ADRESE_LOKACIJA = address.toUpperCase();
+    const sysAddr = (geo.pretty || address || "").trim();
+    working.ADRESE_LOKACIJA = sysAddr ? sysAddr.toUpperCase() : address.toUpperCase();
     const elA = $("ADRESE_LOKACIJA");
     if (elA) elA.value = working.ADRESE_LOKACIJA;
 
