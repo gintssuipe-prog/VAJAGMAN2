@@ -1,5 +1,5 @@
 
-const APP_VERSION = "v2.0.7";
+const APP_VERSION = "v2.0.8";
 const APP_DATE = "2026-01-06";
 
 const STORAGE_KEY_OBJECTS = "vajagman_objects_v3";
@@ -410,12 +410,26 @@ function wireAddressInput(){
 async function geocodeAddress(address){
   const q = encodeURIComponent(address || "");
   const lang = getGeoLang();
-  const url = `https://nominatim.openstreetmap.org/search?format=json&q=${q}&limit=1&accept-language=${encodeURIComponent(lang)}`;
+  const url = `https://nominatim.openstreetmap.org/search?format=json&q=${q}&limit=1&addressdetails=1&accept-language=${encodeURIComponent(lang)}`;
   const res = await fetch(url, { headers: { "Accept": "application/json", "Accept-Language": lang } });
   if (!res.ok) throw new Error("Geocoding kļūda: " + res.status);
   const arr = await res.json();
   if (!arr?.length) return null;
-  return { lat: Number(arr[0].lat), lng: Number(arr[0].lon), pretty: String(arr[0].display_name || "") };
+  const item = arr[0];
+  const a = item && item.address ? item.address : {};
+  const road = a.road || a.pedestrian || a.footway || a.cycleway || "";
+  const house = a.house_number || "";
+  const city = a.city || a.town || a.village || a.municipality || "";
+  let line1 = [road, house].filter(Boolean).join(" ").trim();
+  if (!line1 && item && item.display_name){
+    const parts = String(item.display_name).split(",").map(s=>s.trim()).filter(Boolean);
+    // If first part is a number, treat second as street
+    if (parts.length >= 2 && /^\d+[a-zA-Z]?$/i.test(parts[0]) && parts[1]) line1 = (parts[1] + " " + parts[0]).trim();
+    else if (parts.length >= 1) line1 = parts[0];
+  }
+  let out = [line1, city].filter(Boolean).join(", ").trim();
+  if (!out) out = (item && item.display_name) ? String(item.display_name) : "";
+  return { lat: Number(item.lat), lng: Number(item.lon), pretty: out };
 }
 
 async function reverseGeocode(lat, lng){
@@ -431,7 +445,7 @@ async function reverseGeocode(lat, lng){
   const county = a.county || "";
   const state = a.state || "";
   let line1 = [road, house].filter(Boolean).join(" ").trim();
-  let line2 = city || county || state || "";
+  let line2 = city || "";
   let out = [line1, line2].filter(Boolean).join(", ").trim();
   if (!out) out = (data && data.display_name) ? String(data.display_name) : "";
   return out;

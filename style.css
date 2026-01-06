@@ -124,7 +124,7 @@ body{
 
 .form{ margin-top: 12px; }
 
-.field{ margin-bottom: 6px; }
+.field{ margin-bottom: 4px; }
 
 .fieldRow{
   display:flex;
@@ -143,17 +143,17 @@ body{
   text-transform: uppercase;
 }
 .field input, .field textarea{
-  width: 100%;
+  width:100%;
   border-radius: 12px;
-  border: 2px solid rgba(255,255,255,0.08);
-  padding: 4px 10px;
+  border: 1px solid rgba(255,255,255,0.10);
+  padding: 2px 10px;           /* tighter than header buttons */
   background: var(--field);
   color: var(--fieldText);
   font-size: 16px;
-  line-height: 18px;
+  line-height: 16px;
   outline: none;
 }
-.field textarea{ min-height: 28px; resize: none; overflow:hidden; }
+.field textarea{ min-height: 22px; resize: none; overflow:hidden; }
 
 /* Dirty fields */
 .field.dirty label{ color: var(--dirty); }
