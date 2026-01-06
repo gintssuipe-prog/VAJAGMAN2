@@ -1,5 +1,5 @@
 
-const APP_VERSION = "v2.0.3";
+const APP_VERSION = "v2.0.4";
 const APP_DATE = "2026-01-06";
 
 const STORAGE_KEY_OBJECTS = "vajagman_objects_v3";
@@ -157,14 +157,18 @@ function refreshSaveButton(){
 
 function markDirty(key){
   dirtyFields.add(key);
-  // mark field wrapper dirty
+  // mark field wrapper dirty (if present)
   const wrap = document.querySelector(`.field[data-key="${CSS.escape(key)}"]`);
   if (wrap) wrap.classList.add("dirty");
+  // also mark the input itself dirty (for dynamically built fields without wrappers)
+  const el = $(key);
+  if (el) el.classList.add("dirty");
   refreshSaveButton();
 }
 
 function clearDirtyUI(){
   document.querySelectorAll(".field.dirty").forEach(el => el.classList.remove("dirty"));
+  document.querySelectorAll("textarea.dirty, input.dirty").forEach(el => el.classList.remove("dirty"));
   dirtyFields.clear();
   refreshSaveButton();
 }
@@ -415,29 +419,43 @@ async function fillFromGPS(){
     const me = await getCoords();
     working.LAT = String(me.lat);
     working.LNG = String(me.lng);
-    $("LAT").value = working.LAT;
-    $("LNG").value = working.LNG;
-
-    let pretty = "";
-    try { pretty = await reverseGeocode(me.lat, me.lng); } catch {}
-    if (pretty){
-      working.ADRESE_LOKACIJA = pretty.toUpperCase();
-      $("ADRESE_LOKACIJA").value = working.ADRESE_LOKACIJA;
-
-      if (workingIsNew) working.__addrSystem = true;
-      else if (currentId) { addrSystemIds.add(currentId); saveAddrSystemIds(); }
-      applySystemAddressStyle();
-
-      document.querySelector('.field.addressStandalone')?.classList.add("dirty");
-      markDirty("ADRESE_LOKACIJA");
-    }
+    const elLat = $("LAT");
+    const elLng = $("LNG");
+    if (elLat) elLat.value = working.LAT;
+    if (elLng) elLng.value = working.LNG;
 
     markDirty("LAT");
     markDirty("LNG");
 
+    // Try reverse geocoding (with one quick retry for mobile networks)
+    let pretty = "";
+    try { pretty = await reverseGeocode(me.lat, me.lng); } catch {}
+    if (!pretty){
+      await new Promise(r => setTimeout(r, 500));
+      try { pretty = await reverseGeocode(me.lat, me.lng); } catch {}
+    }
+
+    if (pretty){
+      working.ADRESE_LOKACIJA = String(pretty).toUpperCase();
+      const elA = $("ADRESE_LOKACIJA");
+      if (elA){
+        elA.value = working.ADRESE_LOKACIJA;
+        // keep focus on mobile + ensure it's visible
+        try{
+          elA.focus({ preventScroll: true });
+          const len = elA.value.length;
+          elA.setSelectionRange(len, len);
+          elA.scrollIntoView({ block: "center", behavior: "smooth" });
+        }catch{}
+      }
+      markDirty("ADRESE_LOKACIJA");
+      setStatus("GPS: adrese + koordinātes ieliktas. Nospied SAGLABĀT.", true);
+    }else{
+      setStatus("GPS: koordinātes ieliktas, bet adresi no servisa neizdevās dabūt (internets / limits).", true);
+    }
+
     refreshMarkers();
     updateMiniMap();
-    setStatus("GPS: adrese + koordinātes ieliktas. Nospied SAGLABĀT.", true);
   }catch{
     setStatus("GPS: neizdevās (atļaujas / GPS / internets).", true);
   }
@@ -445,11 +463,40 @@ async function fillFromGPS(){
 
 async function validateAddress(){
   if (!working) return;
+
+  const lat = parseFloat(String(working.LAT || "").trim());
+  const lng = parseFloat(String(working.LNG || "").trim());
+  const hasCoords = Number.isFinite(lat) && Number.isFinite(lng);
+
+  // If we already have coordinates, allow "re-validate" by refreshing the system address from coords.
+  if (hasCoords){
+    try{
+      setStatus("Validēju pēc koordinātēm…", false);
+      let pretty = "";
+      try { pretty = await reverseGeocode(lat, lng); } catch {}
+      if (!pretty){
+        setStatus("Validācija: koordinātes ir, bet adresi no servisa neizdevās dabūt (internets / limits).", true);
+        return;
+      }
+      working.ADRESE_LOKACIJA = String(pretty).toUpperCase();
+      const elA = $("ADRESE_LOKACIJA");
+      if (elA) elA.value = working.ADRESE_LOKACIJA;
+      markDirty("ADRESE_LOKACIJA");
+      refreshMarkers();
+      updateMiniMap();
+      setStatus("Validācija pēc koordinātēm pabeigta. Nospied SAGLABĀT.", true);
+    }catch{
+      setStatus("Validācija pēc koordinātēm neizdevās (internets / serviss).", true);
+    }
+    return;
+  }
+
   const address = String(working.ADRESE_LOKACIJA || "").trim();
   if (!address){
     setStatus("Nav adreses, ko validēt.", true);
     return;
   }
+
   try {
     setStatus("Validēju adresi un meklēju koordinātes…", false);
     const geo = await geocodeAddress(address);
@@ -459,27 +506,13 @@ async function validateAddress(){
     }
     working.LAT = String(geo.lat);
     working.LNG = String(geo.lng);
-
-    let pretty = "";
-    try { pretty = await reverseGeocode(geo.lat, geo.lng); } catch {}
-    const finalAddr = (pretty || address).trim();
-    working.ADRESE_LOKACIJA = finalAddr.toUpperCase();
-    $("ADRESE_LOKACIJA").value = working.ADRESE_LOKACIJA;
-
-    // mark system
-    if (workingIsNew) working.__addrSystem = true;
-    else if (currentId) { addrSystemIds.add(currentId); saveAddrSystemIds(); }
-
-    applySystemAddressStyle();
-
-    // reflect coords fields if visible
-    $("LAT").value = working.LAT;
-    $("LNG").value = working.LNG;
+    const elLat = $("LAT");
+    const elLng = $("LNG");
+    if (elLat) elLat.value = working.LAT;
+    if (elLng) elLng.value = working.LNG;
 
     markDirty("LAT");
     markDirty("LNG");
-    // Address is changed by system: still dirty until user saves
-    document.querySelector('.field.addressStandalone')?.classList.add("dirty");
     markDirty("ADRESE_LOKACIJA");
 
     refreshMarkers();

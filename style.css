@@ -132,7 +132,7 @@ body{
   align-items:stretch;
 }
 .fieldRow .input{ flex:1 1 auto; }
-.btn.call{ flex:0 0 auto; padding: 8px 10px; }
+.btn.call{ flex:0 0 auto; padding: 6px 10px; }
 .field label{
   display:block;
   font-size: 12px;
@@ -150,13 +150,14 @@ body{
   background: var(--field);
   color: var(--fieldText);
   font-size: 16px;
+  line-height: 20px;
   outline: none;
 }
-.field textarea{ min-height: 40px; resize: none; overflow:hidden; }
+.field textarea{ min-height: 34px; resize: none; overflow:hidden; }
 
 /* Dirty fields */
 .field.dirty label{ color: var(--dirty); }
-.field.dirty input, .field.dirty textarea{ border-color: rgba(239,68,68,0.7); }
+.field.dirty input, .field.dirty textarea, textarea.dirty, input.dirty{ border-color: rgba(239,68,68,0.7); }
 
 /* System-validated address visual */
 .field.system input, .field.system textarea{
@@ -166,12 +167,14 @@ body{
 }
 
 /* Mini map */
+#miniMap{ width: calc(100% - 18px); margin: 0 auto; }
+
 .miniMapWrap{
   background: transparent;
   border: none;
   border-radius: 16px;
   overflow:hidden;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 .miniMapHdr{
   display:flex;
