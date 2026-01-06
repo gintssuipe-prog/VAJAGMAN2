@@ -124,13 +124,9 @@ body{
 
 .form{ margin-top: 12px; }
 
-.field{ margin-bottom: 4px; }
+.field{ margin-bottom: 6px; }
 
-.fieldRow{
-  display:flex;
-  gap:10px;
-  align-items:center;
-}
+.fieldRow{ display:flex; gap:10px; align-items:flex-start; }
 .fieldRow .input{ flex:1 1 auto; }
 .btn.call{ flex:0 0 auto; }
 .field label{
@@ -146,18 +142,20 @@ body{
   width:100%;
   border-radius: 12px;
   border: 2px solid rgba(255,255,255,0.10);
-  padding: 2px 10px;           /* tighter than header buttons */
+  padding: 6px 10px;           /* slightly slimmer than header buttons */
+  min-height: 32px;            /* slimmer than buttons, but not flat */
   background: var(--field);
   color: var(--fieldText);
   font-size: 16px;
   line-height: 16px;
   outline: none;
+  box-sizing: border-box;
 }
 .field textarea{ min-height: 22px; resize: none; overflow:hidden; }
 
 /* Dirty fields */
 .field.dirty label{ color: var(--dirty); }
-.field.dirty input, .field.dirty textarea, textarea.dirty, input.dirty{ border-color: rgba(239,68,68,0.7); }
+.field.dirty input, .field.dirty textarea, textarea.dirty, input.dirty{ border-color: rgba(255,64,64,0.92); box-shadow: 0 0 0 1px rgba(255,64,64,0.55); }
 
 /* System-validated address visual */
 .field.system input, .field.system textarea{
@@ -356,3 +354,32 @@ textarea{resize:none;overflow:hidden;white-space:pre-wrap;word-break:break-word;
 
 /* Auto-grow: start compact, expand on input */
 textarea.autogrow{ min-height: 22px; }
+
+
+.phoneShort{
+  flex: 0 0 14ch;      /* roughly 12 digits + breathing room */
+  max-width: 16ch;
+}
+
+.nameWrap{
+  flex: 1 1 auto;
+  min-width: 140px;
+}
+
+.inlineLabel{
+  font-size: 12px;
+  font-weight: 900;
+  color: var(--muted);
+  margin: 0 0 4px 0;
+  line-height: 12px;
+}
+
+.nameField{
+  width: 100%;
+}
+
+@media (max-width: 520px){
+  .fieldRow{ flex-wrap: wrap; }
+  .phoneShort{ flex: 1 1 160px; max-width: none; }
+  .nameWrap{ flex: 1 1 200px; min-width: 160px; }
+}
