@@ -145,7 +145,7 @@ body{
 .field input, .field textarea{
   width:100%;
   border-radius: 12px;
-  border: 1px solid rgba(255,255,255,0.10);
+  border: 2px solid rgba(255,255,255,0.10);
   padding: 2px 10px;           /* tighter than header buttons */
   background: var(--field);
   color: var(--fieldText);
@@ -351,14 +351,8 @@ body{
 input, textarea, select, button{font-family: inherit;}
 input, textarea{font-size:16px;line-height:1.25;}
 textarea{resize:none;overflow:hidden;white-space:pre-wrap;word-break:break-word;}
-textarea.input{padding-top:6px;padding-bottom:6px}
 
 /* v1.2.9 - all fields start single-line, auto-grow on input */
-textarea.autogrow{
-  min-height: 48px;         /* same visual height as inputs */
-  height: 48px;             /* initial single-line height */
-  resize: none;
-  overflow: hidden;
-  white-space: pre-wrap;
-  word-break: break-word;
-}
+
+/* Auto-grow: start compact, expand on input */
+textarea.autogrow{ min-height: 22px; }

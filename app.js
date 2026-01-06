@@ -1,7 +1,13 @@
 
-const APP_VERSION = "v2.0.8";
+const APP_VERSION = "v2.1.0";
 const APP_DATE = "2026-01-06";
 
+
+// UI version stamp (single source of truth)
+(function syncVersionStamp(){
+  const el = document.querySelector(".appVer");
+  if (el) el.textContent = `${APP_VERSION} · ${APP_DATE}`;
+})();
 const STORAGE_KEY_OBJECTS = "vajagman_objects_v3";
 const STORAGE_KEY_CURRENT = "vajagman_current_id_v3";
 const STORAGE_KEY_AUTOMODE = "vajagman_auto_open_enabled_v3";
@@ -957,7 +963,7 @@ function updateSubHeaders(){
 
 function autoGrow(el){
   if(!el) return;
-  const min = 48;
+  const min = 22;
   el.style.height = "auto";
   const h = Math.max(min, el.scrollHeight);
   el.style.height = h + "px";
