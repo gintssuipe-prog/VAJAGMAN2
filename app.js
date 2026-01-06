@@ -1,5 +1,5 @@
 
-const APP_VERSION = "v2.0.0";
+const APP_VERSION = "v2.0.1";
 const APP_DATE = "2026-01-06";
 
 const STORAGE_KEY_OBJECTS = "vajagman_objects_v3";
@@ -49,6 +49,7 @@ function setMapStatus(msg){ $("mapStatus").textContent = msg; }
 let objects = [];
 let currentId = null;
 let working = null;          // working copy (may be new)
+let baseline = null; // snapshot of last-saved state for dirty comparison
 let workingIsNew = false;
 let dirtyFields = new Set(); // keys changed (incl. ADRESE_LOKACIJA)
 let addrSystemIds = new Set();
@@ -146,19 +147,41 @@ function refreshSaveButton(){
   if (isDirty) setStatus("Nesaglabātas izmaiņas — nospied SAGLABĀT.", true);
 }
 
-function markDirty(key){
-  dirtyFields.add(key);
-  // mark field wrapper dirty
+
+function setFieldDirty(key, isDirty){
   const wrap = document.querySelector(`.field[data-key="${CSS.escape(key)}"]`);
-  if (wrap) wrap.classList.add("dirty");
+  const input = document.getElementById(key);
+  if (isDirty){
+    dirtyFields.add(key);
+    if (wrap) wrap.classList.add("dirty");
+    if (input) input.classList.add("is-dirty");
+  } else {
+    dirtyFields.delete(key);
+    if (wrap) wrap.classList.remove("dirty");
+    if (input) input.classList.remove("is-dirty");
+  }
   refreshSaveButton();
+}
+
+function syncDirtyForKey(key){
+  if (!working) return;
+  const cur = String(working[key] ?? "");
+  const base = baseline ? String(baseline[key] ?? "") : "";
+  setFieldDirty(key, cur !== base);
+}
+
+function markDirty(key){
+  // Backward compatible wrapper: recompute based on baseline
+  syncDirtyForKey(key);
 }
 
 function clearDirtyUI(){
   document.querySelectorAll(".field.dirty").forEach(el => el.classList.remove("dirty"));
+  document.querySelectorAll(".is-dirty").forEach(el => el.classList.remove("is-dirty"));
   dirtyFields.clear();
   refreshSaveButton();
 }
+
 
 function blankObject(){
   const o = { id: uid(), ADRESE_LOKACIJA: "" };
@@ -166,17 +189,21 @@ function blankObject(){
   return o;
 }
 
+
 function setWorking(o, isNew){
   working = o;
   workingIsNew = !!isNew;
-  dirtyFields.clear();
 
-  // address input
-  $("ADRESE_LOKACIJA").value = String(working.ADRESE_LOKACIJA || "");
-  // clear dirty state on address field wrapper
-  document.querySelector('.field.addressStandalone')?.classList.remove("dirty");
+  // Snapshot for dirty comparison (treat current state as "saved")
+  try{
+    baseline = JSON.parse(JSON.stringify(working));
+  }catch(e){
+    baseline = null;
+  }
 
+  // Render record form
   buildForm($("formRoot"), working);
+  try{ clearDirtyUI(); }catch(e){}
   applySystemAddressStyle();
   updateCtxTitle();
 
@@ -185,6 +212,7 @@ function setWorking(o, isNew){
   refreshSaveButton();
   updateMiniMap();
 }
+
 
 function discardUnsavedChangesIfNeeded(){
   if (dirtyFields.size === 0) return;
@@ -250,6 +278,7 @@ function saveWorking(){
     saveAddrSystemIds();
   }
 
+  try{ baseline = JSON.parse(JSON.stringify(working)); }catch(e){ baseline = null; }
   clearDirtyUI();
   updateCtxTitle(); // title appears/updates ONLY after save
   refreshCatalog();
@@ -332,7 +361,7 @@ function buildForm(root, obj){
       }
 
       working[f.key] = input.value;
-      markDirty(f.key);
+      syncDirtyForKey(f.key);
     });
 
     wrap.appendChild(label);
@@ -346,12 +375,32 @@ function buildForm(root, obj){
   try{ wireAutoGrow(); }catch(e){}
 }
 
+
+function focusField(id){
+  const el = document.getElementById(id);
+  if (!el) return;
+  try{
+    // keep UX stable on mobile: bring field back into view + restore focus
+    setTimeout(() => {
+      try{ el.focus({ preventScroll: true }); }catch(e){ try{ el.focus(); }catch(e2){} }
+      try{
+        const v = String(el.value || "");
+        el.setSelectionRange(v.length, v.length);
+      }catch(e){}
+      try{ el.scrollIntoView({ block: "center", behavior: "smooth" }); }catch(e){}
+    }, 50);
+  }catch(e){}
+}
+
 // Address input (special)
+
 function wireAddressInput(){
   const inp = $("ADRESE_LOKACIJA");
+  if (!inp) return;
   inp.addEventListener("input", () => {
     if (!working) return;
     working.ADRESE_LOKACIJA = inp.value;
+
     // if user edits manually, drop system marker
     if (workingIsNew){
       working.__addrSystem = false;
@@ -361,17 +410,16 @@ function wireAddressInput(){
     }
     applySystemAddressStyle();
 
-    // mark dirty UI on wrapper
-    document.querySelector('.field.addressStandalone')?.classList.add("dirty");
-    markDirty("ADRESE_LOKACIJA");
+    syncDirtyForKey("ADRESE_LOKACIJA");
   });
 }
+
 
 // Geocoding (Nominatim)
 async function geocodeAddress(address){
   const q = encodeURIComponent(address || "");
-  const url = `https://nominatim.openstreetmap.org/search?format=json&q=${q}&limit=1`;
-  const res = await fetch(url, { headers: { "Accept": "application/json" } });
+  const url = `https://nominatim.openstreetmap.org/search?format=json&q=${q}&limit=1&accept-language=${encodeURIComponent(getGeoLang())}`;
+  const res = await geoFetch(url);
   if (!res.ok) throw new Error("Geocoding kļūda: " + res.status);
   const arr = await res.json();
   if (!arr?.length) return null;
@@ -379,8 +427,8 @@ async function geocodeAddress(address){
 }
 
 async function reverseGeocode(lat, lng){
-  const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lng)}&zoom=18&addressdetails=1`;
-  const res = await fetch(url, { headers: { "Accept": "application/json" } });
+  const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lng)}&zoom=18&addressdetails=1&accept-language=${encodeURIComponent(getGeoLang())}`;
+  const res = await geoFetch(url);
   if (!res.ok) throw new Error("Reverse geocoding kļūda: " + res.status);
   const data = await res.json();
   const a = data && data.address ? data.address : {};
@@ -410,15 +458,12 @@ async function fillFromGPS(){
     let pretty = "";
     try { pretty = await reverseGeocode(me.lat, me.lng); } catch {}
     if (pretty){
-      working.ADRESE_LOKACIJA = pretty.toUpperCase();
+      working.ADRESE_LOKACIJA = pretty;
       $("ADRESE_LOKACIJA").value = working.ADRESE_LOKACIJA;
 
       if (workingIsNew) working.__addrSystem = true;
       else if (currentId) { addrSystemIds.add(currentId); saveAddrSystemIds(); }
-      applySystemAddressStyle();
-
-      document.querySelector('.field.addressStandalone')?.classList.add("dirty");
-      markDirty("ADRESE_LOKACIJA");
+      applySystemAddressStyle();      markDirty("ADRESE_LOKACIJA");
     }
 
     markDirty("LAT");
@@ -427,6 +472,7 @@ async function fillFromGPS(){
     refreshMarkers();
     updateMiniMap();
     setStatus("GPS: adrese + koordinātes ieliktas. Nospied SAGLABĀT.", true);
+    focusField("ADRESE_LOKACIJA");
   }catch{
     setStatus("GPS: neizdevās (atļaujas / GPS / internets).", true);
   }
@@ -452,7 +498,7 @@ async function validateAddress(){
     let pretty = "";
     try { pretty = await reverseGeocode(geo.lat, geo.lng); } catch {}
     const finalAddr = (pretty || address).trim();
-    working.ADRESE_LOKACIJA = finalAddr.toUpperCase();
+    working.ADRESE_LOKACIJA = finalAddr;
     $("ADRESE_LOKACIJA").value = working.ADRESE_LOKACIJA;
 
     // mark system
@@ -467,13 +513,12 @@ async function validateAddress(){
 
     markDirty("LAT");
     markDirty("LNG");
-    // Address is changed by system: still dirty until user saves
-    document.querySelector('.field.addressStandalone')?.classList.add("dirty");
-    markDirty("ADRESE_LOKACIJA");
+    // Address is changed by system: still dirty until user saves    markDirty("ADRESE_LOKACIJA");
 
     refreshMarkers();
     updateMiniMap();
     setStatus("Adreses validācija pabeigta + koordinātes ieliktas. Nospied SAGLABĀT.", true);
+    focusField("ADRESE_LOKACIJA");
   } catch {
     setStatus("Adreses validācija neizdevās (internets / serviss).", true);
   }
@@ -903,4 +948,24 @@ document.addEventListener('DOMContentLoaded', ()=>{
   if(typeof renderMapView === 'function') renderMapView = wrap(renderMapView);
   if(typeof renderCatalogView === 'function') renderCatalogView = wrap(renderCatalogView);
 })();
+
+// Language for geocoding/reverse-geocoding (do NOT depend on browser UI language)
+// Stored in localStorage as "vm_lang". Default: "lv" (Latviešu).
+function getGeoLang(){
+  try{
+    const v = String(localStorage.getItem("vm_lang") || "").trim().toLowerCase();
+    if (v) return v;
+  }catch(e){}
+  return "lv";
+}
+function geoFetch(url){
+  const lang = getGeoLang();
+  return fetch(url, {
+    headers: {
+      "Accept": "application/json",
+      "Accept-Language": `${lang},lv;q=0.9,en;q=0.7`
+    }
+  });
+}
+
 
