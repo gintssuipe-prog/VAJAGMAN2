@@ -124,7 +124,7 @@ body{
 
 .form{ margin-top: 12px; }
 
-.field{ margin-bottom: 8px; }
+.field{ margin-bottom: 6px; }
 
 .fieldRow{
   display:flex;
@@ -132,13 +132,13 @@ body{
   align-items:stretch;
 }
 .fieldRow .input{ flex:1 1 auto; }
-.btn.call{ flex:0 0 auto; padding: 6px 10px; }
+.btn.call{ flex:0 0 auto; }
 .field label{
   display:block;
   font-size: 12px;
   font-weight: 950;
   letter-spacing: .9px;
-  margin-bottom: 4px;
+  margin-bottom: 3px;
   color: var(--text);
   text-transform: uppercase;
 }
@@ -146,14 +146,14 @@ body{
   width: 100%;
   border-radius: 12px;
   border: 2px solid rgba(255,255,255,0.08);
-  padding: 8px 10px;
+  padding: 5px 10px;
   background: var(--field);
   color: var(--fieldText);
   font-size: 16px;
-  line-height: 20px;
+  line-height: 18px;
   outline: none;
 }
-.field textarea{ min-height: 34px; resize: none; overflow:hidden; }
+.field textarea{ min-height: 30px; resize: none; overflow:hidden; }
 
 /* Dirty fields */
 .field.dirty label{ color: var(--dirty); }

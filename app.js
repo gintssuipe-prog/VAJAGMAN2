@@ -1,5 +1,5 @@
 
-const APP_VERSION = "v2.0.4";
+const APP_VERSION = "v2.0.6";
 const APP_DATE = "2026-01-06";
 
 const STORAGE_KEY_OBJECTS = "vajagman_objects_v3";
@@ -60,6 +60,7 @@ let currentId = null;
 let working = null;          // working copy (may be new)
 let workingIsNew = false;
 let dirtyFields = new Set(); // keys changed (incl. ADRESE_LOKACIJA)
+let savedSnapshot = null;   // last saved state snapshot for dirty comparisons
 let addrSystemIds = new Set();
 
 function loadObjects(){ return Array.isArray(loadJson(STORAGE_KEY_OBJECTS, [])) ? loadJson(STORAGE_KEY_OBJECTS, []) : []; }
@@ -166,10 +167,29 @@ function markDirty(key){
   refreshSaveButton();
 }
 
+function unmarkDirty(key){
+  dirtyFields.delete(key);
+  const wrap = document.querySelector(`.field[data-key="${CSS.escape(key)}"]`);
+  if (wrap) wrap.classList.remove("dirty");
+  const el = $(key);
+  if (el) el.classList.remove("dirty");
+  refreshSaveButton();
+}
+
+function syncDirtyForKey(key){
+  // Compare current working value to the saved snapshot.
+  // If there's no snapshot yet (new record), compare to empty.
+  const base = (savedSnapshot && savedSnapshot[key] != null) ? String(savedSnapshot[key]) : "";
+  const cur = (working && working[key] != null) ? String(working[key]) : "";
+  if (cur !== base) markDirty(key);
+  else unmarkDirty(key);
+}
+
 function clearDirtyUI(){
   document.querySelectorAll(".field.dirty").forEach(el => el.classList.remove("dirty"));
   document.querySelectorAll("textarea.dirty, input.dirty").forEach(el => el.classList.remove("dirty"));
   dirtyFields.clear();
+  // snapshot remains; UI is reset only
   refreshSaveButton();
 }
 
@@ -183,6 +203,9 @@ function setWorking(o, isNew){
   working = o;
   workingIsNew = !!isNew;
   dirtyFields.clear();
+
+  // establish snapshot baseline for dirty tracking
+  savedSnapshot = JSON.parse(JSON.stringify(working || {}));
 
   // address input
   $("ADRESE_LOKACIJA").value = String(working.ADRESE_LOKACIJA || "");
@@ -263,6 +286,9 @@ function saveWorking(){
     saveAddrSystemIds();
   }
 
+  // refresh snapshot baseline after successful save
+  savedSnapshot = JSON.parse(JSON.stringify(working || {}));
+
   clearDirtyUI();
   updateCtxTitle(); // title appears/updates ONLY after save
   refreshCatalog();
@@ -320,7 +346,7 @@ function buildForm(root, obj){
 
       callBtn = document.createElement("button");
       callBtn.type = "button";
-      callBtn.className = "btn call";
+      callBtn.className = "btn success call";
       callBtn.textContent = "ZVANS";
       callBtn.disabled = true;
 
@@ -464,18 +490,17 @@ async function fillFromGPS(){
 async function validateAddress(){
   if (!working) return;
 
-  const lat = parseFloat(String(working.LAT || "").trim());
-  const lng = parseFloat(String(working.LNG || "").trim());
-  const hasCoords = Number.isFinite(lat) && Number.isFinite(lng);
+  // Stable behavior: validate primarily by the ADDRESS field.
+  // If address is empty but coordinates exist, then validate by coords (reverse).
+  const address = String(working.ADRESE_LOKACIJA || "").trim();
+  const coords = parseLatLng(working);
 
-  // If we already have coordinates, allow "re-validate" by refreshing the system address from coords.
-  if (hasCoords){
+  if (!address && coords){
     try{
       setStatus("Validēju pēc koordinātēm…", false);
-      let pretty = "";
-      try { pretty = await reverseGeocode(lat, lng); } catch {}
+      const pretty = await reverseGeocode(coords.lat, coords.lng);
       if (!pretty){
-        setStatus("Validācija: koordinātes ir, bet adresi no servisa neizdevās dabūt (internets / limits).", true);
+        setStatus("Validācija: koordinātes ir, bet adresi no servisa neizdevās dabūt.", true);
         return;
       }
       working.ADRESE_LOKACIJA = String(pretty).toUpperCase();
@@ -484,14 +509,13 @@ async function validateAddress(){
       markDirty("ADRESE_LOKACIJA");
       refreshMarkers();
       updateMiniMap();
-      setStatus("Validācija pēc koordinātēm pabeigta. Nospied SAGLABĀT.", true);
+      setStatus("Validācija pabeigta. Nospied SAGLABĀT.", true);
     }catch{
       setStatus("Validācija pēc koordinātēm neizdevās (internets / serviss).", true);
     }
     return;
   }
 
-  const address = String(working.ADRESE_LOKACIJA || "").trim();
   if (!address){
     setStatus("Nav adreses, ko validēt.", true);
     return;
@@ -504,6 +528,7 @@ async function validateAddress(){
       setStatus("Validācija: koordinātes neatradu (precizē adresi).", true);
       return;
     }
+    // Persist coords
     working.LAT = String(geo.lat);
     working.LNG = String(geo.lng);
     const elLat = $("LAT");
@@ -511,13 +536,19 @@ async function validateAddress(){
     if (elLat) elLat.value = working.LAT;
     if (elLng) elLng.value = working.LNG;
 
-    markDirty("LAT");
-    markDirty("LNG");
-    markDirty("ADRESE_LOKACIJA");
+    // Canonicalize address display to ALL CAPS (stable expectation)
+    working.ADRESE_LOKACIJA = address.toUpperCase();
+    const elA = $("ADRESE_LOKACIJA");
+    if (elA) elA.value = working.ADRESE_LOKACIJA;
+
+    // Dirty tracking
+    syncDirtyForKey("LAT");
+    syncDirtyForKey("LNG");
+    syncDirtyForKey("ADRESE_LOKACIJA");
 
     refreshMarkers();
     updateMiniMap();
-    setStatus("Adreses validācija pabeigta + koordinātes ieliktas. Nospied SAGLABĀT.", true);
+    setStatus("Adreses validācija pabeigta. Nospied SAGLABĀT.", true);
   } catch {
     setStatus("Adreses validācija neizdevās (internets / serviss).", true);
   }
