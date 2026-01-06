@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="lv">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>VAJAGMAN</title>
+  <link rel="manifest" href="./manifest.webmanifest">
+  <meta name="theme-color" content="#0f172a">
+  <link rel="stylesheet" href="./style.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+        crossorigin=""/>
+</head>
+<body>
+  <div class="app">
+    
+<header class="hdr">
+  <div class="hdr-top">
+    <span class="appTitle">VAJAGMAN BETA © Gints Suipe</span>
+    <span class="appVer">—</span>
+  </div>
+  <div class="hdr-tabs">
+    <button class="tab active" data-tab="record">IERAKSTS</button>
+    <button class="tab" data-tab="map">KARTE</button>
+    <button class="tab" data-tab="catalog">KATALOGS</button>
+  </div>
+<div class="hdr-sub">
+    <div class="hdr-sub-record">
+      <div class="hdr-status" id="statusRow"><span id="status">Gatavs.</span></div>
+      <div class="ctxRow"><span id="ctxTitle">—</span></div>
+      <div class="hdr-actions">
+        <div class="hdr-actions-left">
+          <button id="btnValidateAddress" class="btn warn">VALIDĒT</button>
+          <button id="btnGps" class="btn warn">GPS</button>
+        </div>
+        <div class="hdr-actions-right">
+          <button id="btnSave" class="btn">SAGLABĀT</button>
+          <button id="btnNew" class="btn success">JAUNS</button>
+        </div>
+      </div>
+    </div>
+    <div class="hdr-sub-map hidden"></div>
+    <div class="hdr-sub-catalog hidden"></div>
+  </div>
+</header>
+
+
+    <main class="main">
+      <section class="panel" id="tab-record">
+        <!-- Address BEFORE mini map -->
+        <div class="field addressStandalone" data-key="ADRESE_LOKACIJA">
+          <label for="ADRESE_LOKACIJA">ADRESE/LOKĀCIJA</label>
+          <textarea id="ADRESE_LOKACIJA" class="input autogrow" rows="1"></textarea>
+        </div>
+
+        <div class="miniMapWrap">
+          <div class="miniMapHdr">
+            
+            <!-- Validation button INSIDE map block -->
+            
+          </div>
+          <div id="miniMap" class="miniMap"></div>
+        </div>
+
+        <section id="formRoot" class="form"></section>
+      </section>
+
+      <section class="panel hidden" id="tab-map">
+        <div class="mapControls">
+          <button id="btnCenterMe" class="btn">Centrēt uz mani</button>
+          <button id="btnFindNearest" class="btn primary">Atrast tuvāko</button>
+
+          <label class="toggle">
+            <input type="checkbox" id="autoOpenToggle" />
+            <span>Auto-atvērt tuvāko (≤ <textarea id="autoRadius" class="radius input autogrow" min="20" step="10" value="80" rows="1"></textarea> m)</span>
+          </label>
+
+          <span id="mapStatus" class="mapStatus">Gatavs.</span>
+        </div>
+        <div id="map" class="map"></div>
+      </section>
+
+      <section class="panel hidden" id="tab-catalog">
+        <div class="catalogTop">
+          <textarea id="search" class="input autogrow" placeholder="Meklēt pēc adreses / objekta nr..." rows="1"></textarea>
+          <button id="btnExport" class="btn">Eksports JSON</button>
+        </div>
+        <div id="listRoot" class="list"></div>
+        <textarea id="exportBox" class="export hidden autogrow input" readonly rows="1"></textarea>
+      </section>
+    </main>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+          crossorigin=""></script>
+  <script src="./app.js" defer></script>
+</body>
+</html>

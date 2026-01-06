@@ -1,0 +1,390 @@
+
+:root{
+  --bg:#070b14;
+  --text:#e2e8f0;
+  --muted:#94a3b8;
+  --border:rgba(255,255,255,0.10);
+  --btn:#1e293b;
+  --btnBlue:#2563eb;
+  --btnGreen:#16a34a;
+  --btnWarn:#f59e0b;
+  --danger:#b91c1c;
+  --field:#dbeafe;
+  --fieldText:#0b1220;
+  --dirty:#ef4444;
+}
+
+*{ box-sizing:border-box; }
+html,body{ height:100%; }
+body{
+  margin:0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+.app{ max-width: 720px; margin:0 auto; }
+
+/* Sticky header */
+.hdr{
+  position: sticky;
+  top: 0;
+  z-index: 10000;
+  background: linear-gradient(180deg, rgba(7,11,20,0.98), rgba(7,11,20,0.92));
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  padding: 10px 12px 8px;
+  backdrop-filter: blur(10px);
+}
+
+.hdrTop{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
+}
+.brand .appName{ font-weight: 950; letter-spacing: .8px; font-size: 18px; }
+.brand .ver{ font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+.hdrActions{ display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
+
+.ctxRow{
+  display:flex;
+  align-items:baseline;
+  gap:10px;
+  margin-top: 6px;
+}
+.ctxLabel{
+  font-size: 11px;
+  letter-spacing: .9px;
+  font-weight: 900;
+  color: var(--muted);
+}
+.ctxTitle{
+  flex:1;
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 950;
+  letter-spacing: .6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+}
+
+.tabs{ display:flex; gap:8px; margin-top: 10px; }
+.tab{
+  flex:1;
+  padding:10px 10px;
+  border-radius: 12px;
+  border:1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.04);
+  color: var(--text);
+  font-weight: 950;
+  letter-spacing: .6px;
+}
+.tab.active{ background: var(--btnBlue); border-color: transparent; }
+
+.statusRow{ margin-top: 8px; font-size: 12px; color: var(--muted); }
+.status.dirty{ color: var(--dirty); font-weight: 900; }
+
+.main{ padding: 10px 12px 18px; }
+
+.panel{
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 18px;
+  padding: 12px;
+}
+.hidden{ display:none; }
+
+.btn{
+  border:1px solid rgba(255,255,255,0.12);
+  background: var(--btn);
+  color: var(--text);
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-weight: 900;
+}
+.btn.primary{ background: var(--btnBlue); border-color: transparent; }
+.btn.success{ background: var(--btnGreen); border-color: transparent; }
+.btn.danger{ background: var(--danger); border-color: transparent; }
+.btn:disabled{
+  opacity: .55;
+  cursor: not-allowed;
+}
+
+.input{
+  width:100%;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.12);
+  padding: 10px 10px;
+  background: #0b1a3a;
+  color: var(--text);
+  font-size: 15px;
+}
+
+.form{ margin-top: 12px; }
+
+.field{ margin-bottom: 12px; }
+
+.fieldRow{
+  display:flex;
+  gap:10px;
+  align-items:stretch;
+}
+.fieldRow .input{
+  flex: 1 1 auto;
+}
+.btn.call{
+  flex: 0 0 auto;
+  padding: 10px 12px;
+}
+.field label{
+  display:block;
+  font-size: 12px;
+  font-weight: 950;
+  letter-spacing: .9px;
+  margin-bottom: 6px;
+  color: var(--text);
+  text-transform: uppercase;
+}
+.field input, .field textarea{
+  width: 100%;
+  border-radius: 12px;
+  border: 2px solid rgba(255,255,255,0.08);
+  padding: 12px 12px;
+  background: var(--field);
+  color: var(--fieldText);
+  font-size: 16px;
+  outline: none;
+}
+.field textarea{ min-height: 44px; resize: none; }
+
+/* Dirty fields */
+.field.dirty label{ color: var(--dirty); }
+.field.dirty input, .field.dirty textarea{ border-color: rgba(239,68,68,0.7); }
+
+/* System-validated address visual */
+.field.system input{
+  text-transform: uppercase;
+  font-weight: 500;
+  letter-spacing: .2px;
+}
+
+/* Mini map */
+.miniMapWrap{
+  background: transparent;
+  border: none;
+  border-radius: 16px;
+  overflow: hidden;
+  width: calc(100% - 18px);
+  margin: 0 auto 12px;
+}
+.miniMapHdr{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding: 10px 10px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.miniTitle{
+  font-weight: 950;
+  letter-spacing: .9px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.miniMap{ height: 150px; }
+
+/* Leaflet z-index fixes for mini map (stay under header) */
+#miniMap, .miniMapWrap { position: relative; z-index: 0; }
+#miniMap .leaflet-pane,
+#miniMap .leaflet-map-pane,
+#miniMap .leaflet-control-container,
+#miniMap .leaflet-top,
+#miniMap .leaflet-bottom,
+#miniMap .leaflet-control { z-index: 0 !important; }
+
+/* Map tab */
+.mapControls{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  align-items:center;
+  justify-content:flex-start;
+  margin-bottom: 10px;
+}
+.map{ height: 65vh; border-radius: 16px; overflow:hidden; border: 1px solid rgba(255,255,255,0.10); }
+.mapStatus{ font-size: 12px; color: var(--muted); }
+
+.toggle{ display:flex; align-items:center; gap:8px; color: var(--text); font-size: 12px; font-weight: 900; }
+.toggle input[type="checkbox"]{ transform: scale(1.2); }
+.radius{
+  width: 84px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.18);
+  padding: 6px 8px;
+  background:#0b1a3a;
+  color: var(--text);
+  font-weight: 950;
+}
+
+/* Catalog */
+.catalogTop{ display:flex; gap:10px; align-items:center; justify-content:space-between; margin-bottom: 12px; }
+.list{ display:flex; flex-direction:column; gap:10px; }
+.item{
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.03);
+  border-radius: 14px;
+  padding: 10px 10px;
+}
+.itemTop{ display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
+.itemTitle{ font-weight: 950; text-transform: uppercase; letter-spacing: .6px; }
+.itemMeta{ margin-top: 4px; font-size: 12px; color: var(--muted); }
+.itemBtns{ display:flex; gap:8px; flex-wrap:wrap; margin-top: 10px; }
+
+.export{
+  width:100%;
+  margin-top: 12px;
+  min-height: 220px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background:#08122a;
+  color: var(--text);
+  padding: 10px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+
+/* Header visual boundary fix */
+.hdr{
+  box-shadow: 0 6px 12px rgba(0,0,0,0.35);
+}
+
+
+/* Header compact: title + version in one row */
+.brandLine{
+  font-weight: 950;
+  letter-spacing: .6px;
+  font-size: 13px;
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text);
+}
+.verBadge{
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 900;
+  white-space: nowrap;
+  padding: 2px 8px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.03);
+}
+
+.hdrTop{
+  align-items:center;
+}
+
+/* Record-only action buttons at bottom of header */
+.hdrActionBar{
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+.hdrActionLeft, .hdrActionRight{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  flex-wrap:wrap;
+}
+.hdrActionBar .btn{
+  padding: 7px 10px;
+  border-radius: 12px;
+  font-size: 13px;
+}
+.btn.warn{
+  background: var(--btnWarn);
+  border-color: transparent;
+  color: #0b1220;
+  font-weight: 950;
+}
+
+/* Slightly smaller tabs to save header height */
+.tab{ padding: 9px 10px; }
+
+
+
+/* v1.2.3 header structure fix */
+.hdrTop{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+
+.hdr{padding:10px;border-bottom:1px solid rgba(255,255,255,.08)}
+.hdr-top{display:flex;justify-content:space-between;font-size:12px;color:#9aa}
+.hdr-tabs{display:flex;gap:8px;margin-top:6px}
+.hdr-sub{margin-top:6px}
+.hdr-actions{display:flex;gap:8px;flex-wrap:wrap}
+
+.hdr-status{margin-top:6px;font-size:12px;color:var(--muted);}
+
+/* v1.2.7 header actions layout */
+.hdr-actions{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:nowrap}
+.hdr-actions-left,.hdr-actions-right{display:flex;gap:8px;align-items:center}
+.hdr-actions-right{margin-left:auto}
+
+/* v1.2.8 - status only in record + spacing */
+.hdr-status{margin-top:6px;font-size:12px;color:var(--muted);line-height:1.2}
+.ctxRow{margin-top:4px;margin-bottom:10px;line-height:1.25}
+#ctxTitle{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* v1.2.8 - map rounding */
+.miniMapWrap{border-radius:16px}
+.miniMapWrap iframe,.miniMapWrap img,.miniMapWrap .miniMap{border-radius:16px}
+
+/* v1.2.8 - consistent typography + wrap/autogrow */
+input, textarea, select, button{font-family: inherit;}
+input, textarea{font-size:16px;line-height:1.25;}
+textarea{resize:none;overflow:hidden;white-space:pre-wrap;word-break:break-word;}
+textarea.input{padding-top:12px;padding-bottom:12px}
+
+/* v1.2.9 - all fields start single-line, auto-grow on input */
+textarea.autogrow{
+  min-height: 48px;         /* same visual height as inputs */
+  height: 48px;             /* initial single-line height */
+  resize: none;
+  overflow: hidden;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* v1.3.0 - standardized input control: everything is textarea (single-line start, autogrow) */
+textarea.input{
+  width: 100%;
+  box-sizing: border-box;
+  border-radius: 14px;
+  border: 2px solid rgba(255,120,120,.85);
+  background: rgba(225,240,255,.95);
+  color: #09101a;
+  padding: 12px 14px;
+  font-size: 16px;
+  line-height: 1.25;
+  resize: none;
+  overflow: hidden;
+  white-space: pre-wrap;
+  word-break: break-word;
+  min-height: 48px;
+  height: 48px;
+}
+textarea.input:focus{
+  outline: none;
+  border-color: rgba(255,170,120,.95);
+}

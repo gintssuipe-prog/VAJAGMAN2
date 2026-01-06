@@ -1,0 +1,9 @@
+{
+  "name": "VAJAGMAN",
+  "short_name": "VAJAGMAN",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#070b14",
+  "theme_color": "#0f172a",
+  "icons": []
+}
