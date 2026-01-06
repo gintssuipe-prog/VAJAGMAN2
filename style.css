@@ -12,6 +12,10 @@
   --field:#dbeafe;
   --fieldText:#0b1220;
   --dirty:#ef4444;
+
+  --control-h: 40px;
+  --control-line: 16px;
+  --control-radius: 12px;
 }
 
 *{ box-sizing:border-box; }
@@ -74,7 +78,7 @@ body{
 .tab{
   flex:1;
   padding:10px 10px;
-  border-radius: 12px;
+  border-radius: var(--control-radius);
   border:1px solid rgba(255,255,255,0.10);
   background: rgba(255,255,255,0.04);
   color: var(--text);
@@ -102,7 +106,7 @@ body{
   color: var(--text);
   height: var(--control-h);
   padding: 0 12px;
-  border-radius: 12px;
+  border-radius: var(--control-radius);
   font-weight: 900;
   font-size: 15px;
   line-height: var(--control-line);
@@ -121,7 +125,7 @@ body{
 
 .input{
   width:100%;
-  border-radius: 12px;
+  border-radius: var(--control-radius);
   border: 2px solid rgba(255,255,255,0.10);
   height: var(--control-h);
   min-height: var(--control-h);
@@ -155,9 +159,7 @@ body{
 
 /* Dirty fields */
 .field.dirty label{ color: var(--dirty); }
-.field.dirty input, .field.dirty textarea, textarea.dirty, input.dirty{ border-color: rgba(255,64,64,0.92); box-shadow: 0 0 0 1px rgba(255,64,64,0.55); }
-
-/* System-validated address visual */
+.field.dirty input, .field.dirty textarea, /* System-validated address visual */
 .field.system input, .field.system textarea{
   text-transform: uppercase;
   font-weight: 500;
@@ -241,7 +243,7 @@ body{
   width:100%;
   margin-top: 12px;
   min-height: 220px;
-  border-radius: 12px;
+  border-radius: var(--control-radius);
   border: 1px solid rgba(255,255,255,0.12);
   background:#08122a;
   color: var(--text);
@@ -300,7 +302,7 @@ body{
 }
 .hdrActionBar .btn{
   padding: 7px 10px;
-  border-radius: 12px;
+  border-radius: var(--control-radius);
   font-size: 13px;
 }
 .btn.warn{
@@ -383,3 +385,23 @@ textarea.autogrow{ min-height: 22px; }
   .phoneShort{ flex: 1 1 160px; max-width: none; }
   .nameWrap{ flex: 1 1 200px; min-width: 160px; }
 }
+
+
+.field textarea,
+.field input{
+  width: 100%;
+  font-size: 16px;
+  line-height: var(--control-line);
+  height: var(--control-h);
+  min-height: var(--control-h);
+  padding: calc((var(--control-h) - var(--control-line))/2 - 1px) 12px;
+  border-radius: var(--control-radius);
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(226, 232, 240, 0.95);
+  color: #0b1220;
+  outline: none;
+  resize: none;
+  box-sizing: border-box;
+}
+
+textarea.dirty, input.dirty{ border:2px solid var(--danger); }

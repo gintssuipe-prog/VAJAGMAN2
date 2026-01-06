@@ -1,5 +1,5 @@
 
-const APP_VERSION = "v2.1.2";
+const APP_VERSION = "v2.1.3";
 const APP_DATE = "2026-01-06";
 
 
@@ -363,7 +363,7 @@ function buildForm(root, obj){
 
       const nameInput = document.createElement("textarea");
       nameInput.id = "VARDS";
-      nameInput.className = "autogrow nameField";
+      nameInput.className = "input autogrow nameField";
       nameInput.rows = 1;
       nameInput.placeholder = "";
       nameInput.value = String((obj && obj.VARDS != null) ? obj.VARDS : "");

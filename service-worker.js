@@ -1,4 +1,4 @@
-const CACHE_NAME = "vajagman-v2.1.2-2026-01-06";
+const CACHE_NAME = "vajagman-v2.1.3-2026-01-06";
 const ASSETS = [
   "./",
   "./index.html",
