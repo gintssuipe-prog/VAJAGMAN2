@@ -1,5 +1,5 @@
 
-const APP_VERSION = "v2.1.8";
+const APP_VERSION = "v2.2.0";
 const APP_DATE = "2026-01-06";
 
 
@@ -26,20 +26,112 @@ function getGeoLang(){
 
 // Fields: address is handled separately (rendered above mini map), but still stored in object.
 const schema = [
+  // MAIN
   { key: "PIEKLUVES_KONTAKTI", label: "PIEKĻUVES KONTAKTS", type: "textarea" },
   { key: "VARDS", label: "VĀRDS", type: "textarea" },
-  { key: "PANELIS_MARKA", label: "PANELIS MARKA", type: "textarea" },
+
+  // AUATSS
+  { key: "OBJEKTA_NR", label: "OBJEKTA NR", type: "textarea" },
+  { key: "REMOTEPAROLE", label: "PULTS/REMOTE PAROLE", type: "textarea" },
+  { key: "PANELIS_MARKA", label: "PANELIS MARKA/MODELIS", type: "textarea" },
   { key: "PAROLE1", label: "PAROLE1", type: "textarea" },
   { key: "PAROLE2", label: "PAROLE2", type: "textarea" },
   { key: "PAROLE3", label: "PAROLE3", type: "textarea" },
-  { key: "REMOTEPAROLE", label: "REMOTEPAROLE", type: "textarea" },
-  { key: "OBJEKTA_NR", label: "OBJEKTA NR", type: "textarea" },
+
+  // OTHER
   { key: "PIEZIMES1", label: "PIEZĪMES1", type: "textarea" },
   { key: "PIEZIMES2", label: "PIEZĪMES2", type: "textarea" },
   { key: "KONFIGURACIJA", label: "KONFIGURĀCIJA", type: "textarea" },
   { key: "LAT", label: "LAT (koordinātes)", type: "textarea" },
-  { key: "LNG", label: "LNG (koordinātes)", type: "textarea" }
+  { key: "LNG", label: "LNG (koordinātes)", type: "textarea" },
 ];
+
+
+// IERAKSTS apakš-šķirkļi (UI filtrs; datu modelis nemainās)
+const RECORD_SUBTABS = ["main","auatss","other"];
+const RECORD_SUBTAB_LABELS = { main: "MAIN", auatss: "AUATSS", other: "OTHER" };
+const SUBTAB_FOR_KEY = {
+  PIEKLUVES_KONTAKTI: "main",
+  VARDS: "main",
+
+  OBJEKTA_NR: "auatss",
+  REMOTEPAROLE: "auatss",
+  PANELIS_MARKA: "auatss",
+  PAROLE1: "auatss",
+  PAROLE2: "auatss",
+  PAROLE3: "auatss",
+
+  PIEZIMES1: "other",
+  PIEZIMES2: "other",
+  KONFIGURACIJA: "other",
+  LAT: "other",
+  LNG: "other",
+};
+
+function getRecordSubtab(){
+  const v = (localStorage.getItem("vm_record_subtab") || "main").toLowerCase();
+  return RECORD_SUBTABS.includes(v) ? v : "main";
+}
+function setRecordSubtab(name){
+  if (!RECORD_SUBTABS.includes(name)) name = "main";
+  localStorage.setItem("vm_record_subtab", name);
+
+  // buttons state
+  document.querySelectorAll("#recordSubtabs .subtabBtn").forEach(b => {
+    b.classList.toggle("active", b.dataset.subtab === name);
+  });
+
+  // hide/show fields
+  document.querySelectorAll('#tab-record [data-subtab]').forEach(el => {
+    const st = (el.dataset.subtab || "main");
+    el.classList.toggle("hiddenBySubtab", st !== name);
+  });
+}
+
+function initRecordSubtabs(){
+  const bar = document.getElementById("recordSubtabs");
+  if (!bar) return;
+
+  // click
+  bar.querySelectorAll(".subtabBtn").forEach(btn => {
+    btn.addEventListener("click", () => setRecordSubtab(btn.dataset.subtab));
+  });
+
+  // swipe on record panel (ignore inputs and map pinch/zoom)
+  const panel = document.getElementById("tab-record");
+  if (!panel) return;
+
+  let sx = 0, sy = 0, st = 0;
+  panel.addEventListener("touchstart", (e) => {
+    if (!e.touches || e.touches.length !== 1) return;
+    const t = e.target;
+    if (t && (t.tagName === "TEXTAREA" || t.tagName === "INPUT")) return;
+    if (t && t.closest && t.closest("#miniMap")) return; // keep map gestures
+    sx = e.touches[0].clientX;
+    sy = e.touches[0].clientY;
+    st = Date.now();
+  }, { passive: true });
+
+  panel.addEventListener("touchend", (e) => {
+    if (!sx) return;
+    const dt = Date.now() - st;
+    const ex = (e.changedTouches && e.changedTouches[0]) ? e.changedTouches[0].clientX : sx;
+    const ey = (e.changedTouches && e.changedTouches[0]) ? e.changedTouches[0].clientY : sy;
+    const dx = ex - sx;
+    const dy = ey - sy;
+    sx = 0;
+
+    if (dt > 600) return;
+    if (Math.abs(dx) < 50) return;
+    if (Math.abs(dy) > 35) return;
+
+    const cur = getRecordSubtab();
+    const idx = RECORD_SUBTABS.indexOf(cur);
+    const next = dx < 0 ? RECORD_SUBTABS[Math.min(idx+1, RECORD_SUBTABS.length-1)]
+                        : RECORD_SUBTABS[Math.max(idx-1, 0)];
+    if (next !== cur) setRecordSubtab(next);
+  }, { passive: true });
+}
 
 function $(id){ return document.getElementById(id); }
 function setValueSafe(id, v){ const el = $(id); if (el) el.value = v; }
@@ -324,6 +416,7 @@ function buildForm(root, obj){
     const wrap = document.createElement("div");
     wrap.className = "field";
     wrap.dataset.key = f.key;
+    wrap.dataset.subtab = SUBTAB_FOR_KEY[f.key] || "other";
 
     const label = document.createElement("label");
     label.textContent = f.label;
@@ -811,6 +904,10 @@ function switchTab(name){
   $("tab-" + name).classList.remove("hidden");
   document.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t.dataset.tab === name));
 
+  if (name === "record") {
+    try { setRecordSubtab(getRecordSubtab()); } catch(e) {}
+  }
+
   if (name === "map") {
     ensureMap();
     setTimeout(() => map.invalidateSize(), 50);
@@ -943,6 +1040,8 @@ document.addEventListener("DOMContentLoaded", () => {
   // Address wire-up
   wireAddressInput();
   wireDoorCodeInput();
+  initRecordSubtabs();
+  setRecordSubtab(getRecordSubtab());
 
   if (currentId) {
     setWorking(structuredClone(getSavedById(currentId)), false);

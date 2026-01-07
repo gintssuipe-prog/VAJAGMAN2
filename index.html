@@ -17,7 +17,7 @@
 <header class="hdr">
   <div class="hdr-top">
     <span class="appTitle">VAJAGMAN BETA © Gints Suipe</span>
-    <span class="appVer">v2.1.7 · 2026-01-06</span>
+    <span class="appVer">v2.2.0 · 2026-01-06</span>
   </div>
   <div class="hdr-tabs">
     <button class="tab active" data-tab="record">IERAKSTS</button>
@@ -48,18 +48,18 @@
     <main class="main">
       <section class="panel" id="tab-record">
         <!-- Address BEFORE mini map -->
-        <div class="field addressStandalone" data-key="ADRESE_LOKACIJA">
+        <div class="field addressStandalone" data-key="ADRESE_LOKACIJA" data-subtab="main">
           <label for="ADRESE_LOKACIJA">ADRESE/LOKĀCIJA</label>
           <textarea id="ADRESE_LOKACIJA" class="input autogrow" rows="1"></textarea>
         </div>
 
 
-        <div class="field" data-key="DURVJU_KODS_PIEKLUVE">
+        <div class="field" data-key="DURVJU_KODS_PIEKLUVE" data-subtab="main">
           <label for="DURVJU_KODS_PIEKLUVE">DURVJU KODS/PIEKĻUVE</label>
           <textarea id="DURVJU_KODS_PIEKLUVE" class="input autogrow" rows="1"></textarea>
         </div>
 
-        <div class="miniMapWrap">
+        <div class="miniMapWrap" data-subtab="main">
           <div class="miniMapHdr">
             
             <!-- Validation button INSIDE map block -->
@@ -69,6 +69,11 @@
         </div>
 
         <section id="formRoot" class="form"></section>
+        <div id="recordSubtabs" class="recordSubtabs" aria-label="IERAKSTS apakš-šķirkļi">
+          <button class="subtabBtn" data-subtab="main" type="button">MAIN</button>
+          <button class="subtabBtn" data-subtab="auatss" type="button">AUATSS</button>
+          <button class="subtabBtn" data-subtab="other" type="button">OTHER</button>
+        </div>
       </section>
 
       <section class="panel hidden" id="tab-map">
