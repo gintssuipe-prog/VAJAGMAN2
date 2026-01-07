@@ -1,5 +1,5 @@
 
-const APP_VERSION = "v2.1.6";
+const APP_VERSION = "v2.1.7";
 const APP_DATE = "2026-01-06";
 
 
@@ -42,6 +42,7 @@ const schema = [
 ];
 
 function $(id){ return document.getElementById(id); }
+function setValueSafe(id, v){ const el = $(id); if (el) el.value = v; }
 function uid(){ return Math.random().toString(16).slice(2) + Date.now().toString(16); }
 
 function loadJson(key, fallback){
@@ -214,8 +215,8 @@ function setWorking(o, isNew){
   savedSnapshot = JSON.parse(JSON.stringify(working || {}));
 
   // address input
-  $("ADRESE_LOKACIJA").value = String(working.ADRESE_LOKACIJA || "");
-  $("DURVJU_KODS_PIEKLUVE").value = String(working.DURVJU_KODS_PIEKLUVE || "");
+  setValueSafe("ADRESE_LOKACIJA", String(working.ADRESE_LOKACIJA || ""));
+  setValueSafe("DURVJU_KODS_PIEKLUVE", String(working.DURVJU_KODS_PIEKLUVE || ""));
   // clear dirty state on address field wrapper
   document.querySelector('.field.addressStandalone')?.classList.remove("dirty");
   document.querySelector('.field[data-key="DURVJU_KODS_PIEKLUVE"]')?.classList.remove("dirty");
@@ -412,6 +413,7 @@ function buildForm(root, obj){
 // Address input (special)
 function wireAddressInput(){
   const inp = $("ADRESE_LOKACIJA");
+  if (!inp) return;
   inp.addEventListener("input", () => {
     if (!working) return;
     working.ADRESE_LOKACIJA = inp.value;
@@ -515,6 +517,7 @@ async function fillFromGPS(){
     if (pretty){
       working.ADRESE_LOKACIJA = String(pretty).toUpperCase();
       const elA = $("ADRESE_LOKACIJA");
+  if (!elA) return;
       if (elA){
         elA.value = working.ADRESE_LOKACIJA;
         // keep focus on mobile + ensure it's visible
@@ -556,6 +559,7 @@ async function validateAddress(){
       }
       working.ADRESE_LOKACIJA = String(pretty).toUpperCase();
       const elA = $("ADRESE_LOKACIJA");
+  if (!elA) return;
       if (elA) elA.value = working.ADRESE_LOKACIJA;
       markDirty("ADRESE_LOKACIJA");
       refreshMarkers();
@@ -591,6 +595,7 @@ async function validateAddress(){
     const sysAddr = (geo.pretty || address || "").trim();
     working.ADRESE_LOKACIJA = sysAddr ? sysAddr.toUpperCase() : address.toUpperCase();
     const elA = $("ADRESE_LOKACIJA");
+  if (!elA) return;
     if (elA) elA.value = working.ADRESE_LOKACIJA;
 
     // Dirty tracking
