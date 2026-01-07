@@ -1,5 +1,5 @@
 
-const APP_VERSION = "v2.2.0";
+const APP_VERSION = "v2.2.1";
 const APP_DATE = "2026-01-06";
 
 
@@ -96,42 +96,7 @@ function initRecordSubtabs(){
   bar.querySelectorAll(".subtabBtn").forEach(btn => {
     btn.addEventListener("click", () => setRecordSubtab(btn.dataset.subtab));
   });
-
-  // swipe on record panel (ignore inputs and map pinch/zoom)
-  const panel = document.getElementById("tab-record");
-  if (!panel) return;
-
-  let sx = 0, sy = 0, st = 0;
-  panel.addEventListener("touchstart", (e) => {
-    if (!e.touches || e.touches.length !== 1) return;
-    const t = e.target;
-    if (t && (t.tagName === "TEXTAREA" || t.tagName === "INPUT")) return;
-    if (t && t.closest && t.closest("#miniMap")) return; // keep map gestures
-    sx = e.touches[0].clientX;
-    sy = e.touches[0].clientY;
-    st = Date.now();
-  }, { passive: true });
-
-  panel.addEventListener("touchend", (e) => {
-    if (!sx) return;
-    const dt = Date.now() - st;
-    const ex = (e.changedTouches && e.changedTouches[0]) ? e.changedTouches[0].clientX : sx;
-    const ey = (e.changedTouches && e.changedTouches[0]) ? e.changedTouches[0].clientY : sy;
-    const dx = ex - sx;
-    const dy = ey - sy;
-    sx = 0;
-
-    if (dt > 600) return;
-    if (Math.abs(dx) < 50) return;
-    if (Math.abs(dy) > 35) return;
-
-    const cur = getRecordSubtab();
-    const idx = RECORD_SUBTABS.indexOf(cur);
-    const next = dx < 0 ? RECORD_SUBTABS[Math.min(idx+1, RECORD_SUBTABS.length-1)]
-                        : RECORD_SUBTABS[Math.max(idx-1, 0)];
-    if (next !== cur) setRecordSubtab(next);
-  }, { passive: true });
-}
+  // swipe disabled: lietotājs pārslēdz tabus tikai ar klikšķi (lai nepārslēdz pārlūku ar swipe)
 
 function $(id){ return document.getElementById(id); }
 function setValueSafe(id, v){ const el = $(id); if (el) el.value = v; }

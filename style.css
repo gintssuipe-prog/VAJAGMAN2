@@ -252,12 +252,10 @@ body{
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
-
 /* Header visual boundary fix */
 .hdr{
   box-shadow: 0 6px 12px rgba(0,0,0,0.35);
 }
-
 
 /* Header compact: title + version in one row */
 .brandLine{
@@ -317,7 +315,6 @@ body{
 .tab{ padding: 9px 10px; }
 
 
-
 /* v1.2.3 header structure fix */
 .hdrTop{
   display:flex;
@@ -358,7 +355,6 @@ textarea{resize:none;overflow:hidden;white-space:pre-wrap;word-break:break-word;
 /* Auto-grow: start compact, expand on input */
 textarea.autogrow{ min-height: 22px; }
 
-
 .phoneShort{
   flex: 0 0 14ch;      /* roughly 12 digits + breathing room */
   max-width: 16ch;
@@ -387,7 +383,6 @@ textarea.autogrow{ min-height: 22px; }
   .nameWrap{ flex: 1 1 200px; min-width: 160px; }
 }
 
-
 .field textarea,
 .field input{
   width: 100%;
@@ -406,7 +401,6 @@ textarea.autogrow{ min-height: 22px; }
 }
 
 textarea.dirty, input.dirty{ border:2px solid var(--danger); }
-
 
 
 /* Contact row layout: keep phone+call together, name narrower */
@@ -431,14 +425,12 @@ textarea.dirty, input.dirty{ border:2px solid var(--danger); }
   .fieldRow.phoneRow .phoneField{ flex: 1 1 auto; max-width: none; }
 }
 
-
 /* System-provided address style (ONLY for address field) */
 .field.addressStandalone.system textarea{
   text-transform: uppercase;
   font-weight: 500;
   letter-spacing: .2px;
 }
-
 
 /* IERAKSTS apakš-šķirkļi (Excel stila tabu strīpa) */
 :root{
@@ -452,24 +444,22 @@ textarea.dirty, input.dirty{ border:2px solid var(--danger); }
 .recordSubtabs{
   position: sticky;
   bottom: 0;
-  margin-top: 10px;
-  height: var(--subtabs-h);
+  margin-top: 14px;
+  height: 56px;
   display: flex;
-  gap: 8px;
-  padding: 6px;
-  border-radius: 16px;
-  border: 1px solid rgba(255,255,255,0.12);
-  background: rgba(0,0,0,0.35);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  z-index: 20;
+  gap: 10px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  z-index: 50;
 }
 
+/* Excel-stila TABI */
 .subtabBtn{
   flex: 1 1 0;
-  height: calc(var(--subtabs-h) - 12px);
-  border-radius: 14px;
-  border: 1px solid rgba(255,255,255,0.12);
+  height: 56px;
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,0.14);
   background: rgba(255,255,255,0.06);
   color: var(--text);
   font-weight: 900;
