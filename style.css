@@ -421,6 +421,16 @@ textarea.dirty, input.dirty{ border:2px solid var(--danger); }
   .fieldRow.contactRow .nameWrap{ flex-basis: 100%; min-width: 0; }
 }
 
+/* Phone row (PIEKĻUVES KONTAKTS + ZVANĪT): keep button from jumping down on desktop */
+.fieldRow.phoneRow{ display:flex; gap:10px; align-items:center; flex-wrap:nowrap; }
+.fieldRow.phoneRow .phoneField{ flex: 0 1 320px; max-width: 360px; }
+.fieldRow.phoneRow .btn{ flex: 0 0 auto; }
+@media (max-width: 520px){
+  /* On narrow screens allow phone to shrink; button stays visible */
+  .fieldRow.phoneRow{ flex-wrap:nowrap; }
+  .fieldRow.phoneRow .phoneField{ flex: 1 1 auto; max-width: none; }
+}
+
 
 /* System-provided address style (ONLY for address field) */
 .field.addressStandalone.system textarea{

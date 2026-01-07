@@ -1,5 +1,5 @@
 
-const APP_VERSION = "v2.1.7";
+const APP_VERSION = "v2.1.8";
 const APP_DATE = "2026-01-06";
 
 
@@ -517,7 +517,6 @@ async function fillFromGPS(){
     if (pretty){
       working.ADRESE_LOKACIJA = String(pretty).toUpperCase();
       const elA = $("ADRESE_LOKACIJA");
-  if (!elA) return;
       if (elA){
         elA.value = working.ADRESE_LOKACIJA;
         // keep focus on mobile + ensure it's visible
@@ -559,7 +558,6 @@ async function validateAddress(){
       }
       working.ADRESE_LOKACIJA = String(pretty).toUpperCase();
       const elA = $("ADRESE_LOKACIJA");
-  if (!elA) return;
       if (elA) elA.value = working.ADRESE_LOKACIJA;
       markDirty("ADRESE_LOKACIJA");
       refreshMarkers();
@@ -595,7 +593,6 @@ async function validateAddress(){
     const sysAddr = (geo.pretty || address || "").trim();
     working.ADRESE_LOKACIJA = sysAddr ? sysAddr.toUpperCase() : address.toUpperCase();
     const elA = $("ADRESE_LOKACIJA");
-  if (!elA) return;
     if (elA) elA.value = working.ADRESE_LOKACIJA;
 
     // Dirty tracking
@@ -945,6 +942,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Address wire-up
   wireAddressInput();
+  wireDoorCodeInput();
 
   if (currentId) {
     setWorking(structuredClone(getSavedById(currentId)), false);
