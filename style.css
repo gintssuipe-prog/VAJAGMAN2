@@ -159,7 +159,12 @@ body{
 
 /* Dirty fields */
 .field.dirty label{ color: var(--dirty); }
-.field.dirty input, .field.dirty textarea, /* System-validated address visual */
+.field.dirty input, .field.dirty textarea{
+  font-weight: 500;
+  letter-spacing: .2px;
+}
+
+/* System-validated address visual (ALL CAPS only for system-filled address) */
 .field.system input, .field.system textarea{
   text-transform: uppercase;
   font-weight: 500;
@@ -405,3 +410,17 @@ textarea.autogrow{ min-height: 22px; }
 }
 
 textarea.dirty, input.dirty{ border:2px solid var(--danger); }
+
+
+
+/* Contact row layout: keep phone+call together, name narrower */
+.fieldRow.contactRow{ align-items:center; flex-wrap:wrap; }
+.fieldRow.contactRow .phoneGroup{ display:flex; gap:10px; align-items:center; flex: 2 1 260px; min-width: 240px; }
+.fieldRow.contactRow .nameWrap{ flex: 1 1 180px; min-width: 160px; }
+.fieldRow.contactRow .phoneGroup .btn{ flex: 0 0 auto; }
+.fieldRow.contactRow textarea, .fieldRow.contactRow input{ width: 100%; }
+
+/* Very narrow screens: move name below, but keep phone+call on one line */
+@media (max-width: 420px){
+  .fieldRow.contactRow .nameWrap{ flex-basis: 100%; min-width: 0; }
+}

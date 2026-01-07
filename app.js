@@ -1,5 +1,5 @@
 
-const APP_VERSION = "v2.1.3";
+const APP_VERSION = "v2.1.4";
 const APP_DATE = "2026-01-06";
 
 
@@ -348,10 +348,13 @@ function buildForm(root, obj){
     let callBtn = null;
     if (f.key === "PIEKLUVES_KONTAKTI"){
       row = document.createElement("div");
-      row.className = "fieldRow";
+      row.className = "fieldRow contactRow";
+
+      const phoneGroup = document.createElement("div");
+      phoneGroup.className = "phoneGroup";
+
 
       // Phone input (short)
-      input.classList.add("phoneShort");
 
       // Name input (inline, stored as working.VARDS)
       const nameWrap = document.createElement("div");
@@ -390,9 +393,13 @@ function buildForm(root, obj){
         window.location.href = "tel:" + num;
       });
 
-      row.appendChild(input);
+
+      phoneGroup.appendChild(input);
+      phoneGroup.appendChild(callBtn);
+
+      row.appendChild(phoneGroup);
       row.appendChild(nameWrap);
-      row.appendChild(callBtn);
+
     }
 
     input.addEventListener("input", () => {
