@@ -437,23 +437,28 @@ textarea.dirty, input.dirty{ border:2px solid var(--danger); }
   --subtabs-h: 44px;
 }
 
-#tab-record{
-  padding-bottom: calc(12px + var(--subtabs-h) + env(safe-area-inset-bottom));
-}
-
 .recordSubtabs{
-  position: sticky;
+  position: fixed;
+  left: 0;
+  right: 0;
   bottom: 0;
-  margin-top: 14px;
   height: 56px;
   display: flex;
   align-items: flex-end;
   gap: 10px;
-  padding: 0 0 0 0;
+  padding: 0 14px calc(env(safe-area-inset-bottom) + 10px) 14px;
   border: 0;
-  background: transparent;
-  z-index: 50;
+  background: rgba(10,14,22,0.92);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  z-index: 80;
 }
+
+/* lai pēdējie lauki nepaliek zem TAB joslas */
+#tab-record{
+  padding-bottom: calc(56px + env(safe-area-inset-bottom) + 14px);
+}
+
 
 
 /* Excel-stila TABI */

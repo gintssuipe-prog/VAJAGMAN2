@@ -1,5 +1,5 @@
 
-const APP_VERSION = "v2.2.4";
+const APP_VERSION = "v2.2.5";
 const APP_DATE = "2026-01-06";
 
 
@@ -82,7 +82,7 @@ function setRecordSubtab(name){
   });
 
   // hide/show fields
-  document.querySelectorAll('#tab-record [data-subtab]').forEach(el => {
+  document.querySelectorAll('#tab-record [data-subtab]:not(.subtabBtn)').forEach(el => {
     const st = (el.dataset.subtab || "main");
     el.classList.toggle("hiddenBySubtab", st !== name);
   });
