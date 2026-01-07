@@ -447,19 +447,22 @@ textarea.dirty, input.dirty{ border:2px solid var(--danger); }
   margin-top: 14px;
   height: 56px;
   display: flex;
+  align-items: flex-end;
   gap: 10px;
-  padding: 0;
+  padding: 0 0 0 0;
   border: 0;
   background: transparent;
   z-index: 50;
 }
 
+
 /* Excel-stila TABI */
 .subtabBtn{
   flex: 1 1 0;
   height: 56px;
-  border-radius: 18px;
+  border-radius: 18px 18px 0 0; /* apakša taisna — kā TAB */
   border: 1px solid rgba(255,255,255,0.14);
+  border-bottom: 0;
   background: rgba(255,255,255,0.06);
   color: var(--text);
   font-weight: 900;
@@ -467,9 +470,12 @@ textarea.dirty, input.dirty{ border:2px solid var(--danger); }
   font-size: 14px;
   cursor: pointer;
 }
+
 .subtabBtn.active{
   background: var(--btnBlue);
   border-color: transparent;
+  box-shadow: 0 -6px 18px rgba(0,0,0,0.35);
 }
+
 
 .hiddenBySubtab{ display:none !important; }

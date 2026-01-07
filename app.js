@@ -1,5 +1,5 @@
 
-const APP_VERSION = "v2.2.1";
+const APP_VERSION = "v2.2.3";
 const APP_DATE = "2026-01-06";
 
 
@@ -97,6 +97,11 @@ function initRecordSubtabs(){
     btn.addEventListener("click", () => setRecordSubtab(btn.dataset.subtab));
   });
   // swipe disabled: lietotājs pārslēdz tabus tikai ar klikšķi (lai nepārslēdz pārlūku ar swipe)
+
+  // initial state
+  setRecordSubtab(getRecordSubtab());
+}
+
 
 function $(id){ return document.getElementById(id); }
 function setValueSafe(id, v){ const el = $(id); if (el) el.value = v; }
