@@ -1,5 +1,5 @@
 
-const APP_VERSION = "v2.2.6";
+const APP_VERSION = "v2.2.8";
 const APP_DATE = "2026-01-06";
 
 
@@ -284,6 +284,8 @@ function setWorking(o, isNew){
   document.querySelector('.field[data-key="DURVJU_KODS_PIEKLUVE"]')?.classList.remove("dirty");
 
   buildForm($("formRoot"), working);
+  // Re-apply record subtab filtering after rebuilding form (e.g., after JAUNS)
+  if (activeTab === "record") setRecordSubtab(getRecordSubtab());
   // Apply IERAKSTS subtab filter to freshly built fields
   setRecordSubtab(getRecordSubtab());
   applySystemAddressStyle();
