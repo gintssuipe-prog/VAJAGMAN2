@@ -1,5 +1,5 @@
 
-const APP_VERSION = "v2.1.5";
+const APP_VERSION = "v2.1.6";
 const APP_DATE = "2026-01-06";
 
 
@@ -26,8 +26,8 @@ function getGeoLang(){
 
 // Fields: address is handled separately (rendered above mini map), but still stored in object.
 const schema = [
-  { key: "DURVJU_KODS_PIEKLUVE", label: "DURVJU KODS/PIEKĻUVE", type: "textarea" },
   { key: "PIEKLUVES_KONTAKTI", label: "PIEKĻUVES KONTAKTS", type: "textarea" },
+  { key: "VARDS", label: "VĀRDS", type: "textarea" },
   { key: "PANELIS_MARKA", label: "PANELIS MARKA", type: "textarea" },
   { key: "PAROLE1", label: "PAROLE1", type: "textarea" },
   { key: "PAROLE2", label: "PAROLE2", type: "textarea" },
@@ -38,7 +38,7 @@ const schema = [
   { key: "PIEZIMES2", label: "PIEZĪMES2", type: "textarea" },
   { key: "KONFIGURACIJA", label: "KONFIGURĀCIJA", type: "textarea" },
   { key: "LAT", label: "LAT (koordinātes)", type: "textarea" },
-  { key: "LNG", label: "LNG (koordinātes)", type: "textarea" },
+  { key: "LNG", label: "LNG (koordinātes)", type: "textarea" }
 ];
 
 function $(id){ return document.getElementById(id); }
@@ -215,8 +215,10 @@ function setWorking(o, isNew){
 
   // address input
   $("ADRESE_LOKACIJA").value = String(working.ADRESE_LOKACIJA || "");
+  $("DURVJU_KODS_PIEKLUVE").value = String(working.DURVJU_KODS_PIEKLUVE || "");
   // clear dirty state on address field wrapper
   document.querySelector('.field.addressStandalone')?.classList.remove("dirty");
+  document.querySelector('.field[data-key="DURVJU_KODS_PIEKLUVE"]')?.classList.remove("dirty");
 
   buildForm($("formRoot"), working);
   applySystemAddressStyle();
@@ -326,105 +328,86 @@ function buildForm(root, obj){
     label.textContent = f.label;
     label.htmlFor = f.key;
 
-    // VAJAGMAN v2: one input type across the app = textarea (with autogrow)
+    // Special row: phone + call button
+    if (f.key === "PIEKLUVES_KONTAKTI"){
+      wrap.appendChild(label);
+
+      const row = document.createElement("div");
+      row.className = "fieldRow phoneRow";
+
+      const phone = document.createElement("textarea");
+      phone.id = f.key;
+      phone.className = "input autogrow phoneField";
+      phone.rows = 1;
+      phone.placeholder = "tālrunis (tikai cipari)";
+      phone.inputMode = "numeric";
+      phone.autocapitalize = "off";
+      phone.autocomplete = "tel";
+      phone.maxLength = 18;
+      phone.value = String((obj && obj[f.key] != null) ? obj[f.key] : "");
+
+      const callBtn = document.createElement("button");
+      callBtn.type = "button";
+      callBtn.className = "btn success call";
+      callBtn.id = "btnCall";
+      callBtn.textContent = "ZVANĪT";
+
+      function syncCallBtn(){
+        const digits = (phone.value || "").replace(/\D+/g,"");
+        callBtn.disabled = digits.length === 0;
+      }
+
+      phone.addEventListener("input", () => {
+        if (!working) return;
+        // digits only + max 18
+        const cleaned = (phone.value || "").replace(/\D+/g,"").slice(0, 18);
+        if (phone.value !== cleaned) phone.value = cleaned;
+
+        working[f.key] = phone.value;
+        syncDirtyForKey(f.key);
+        try { autoGrow(phone); } catch(e){}
+        syncCallBtn();
+      });
+
+      callBtn.addEventListener("click", () => {
+        const digits = (phone.value || "").replace(/\D+/g,"");
+        if (!digits) return;
+        window.location.href = "tel:" + digits;
+      });
+
+      row.appendChild(phone);
+      row.appendChild(callBtn);
+      wrap.appendChild(row);
+
+      try { autoGrow(phone); } catch(e){}
+      syncCallBtn();
+
+      root.appendChild(wrap);
+      continue;
+    }
+
+    // Default: textarea
     const input = document.createElement("textarea");
     input.id = f.key;
     input.className = "input autogrow";
     input.rows = 1;
-    input.spellcheck = false;
-
-    // Field-specific behavior
-    if (f.key === "PIEKLUVES_KONTAKTI"){
-      // Digits only, max 12
-      input.inputMode = "numeric";
-      input.autocomplete = "tel";
-      input.placeholder = "tālrunis (tikai cipari)";
-    }
-
     input.value = String((obj && obj[f.key] != null) ? obj[f.key] : "");
-
-    // Row layout (optional call button)
-    let row = null;
-    let callBtn = null;
-    if (f.key === "PIEKLUVES_KONTAKTI"){
-      row = document.createElement("div");
-      row.className = "fieldRow contactRow";
-
-      const phoneGroup = document.createElement("div");
-      phoneGroup.className = "phoneGroup";
-
-
-      // Phone input (short)
-
-      // Name input (inline, stored as working.VARDS)
-      const nameWrap = document.createElement("div");
-      nameWrap.className = "nameWrap";
-
-      const nameLbl = document.createElement("div");
-      nameLbl.className = "inlineLabel";
-      nameLbl.textContent = "VĀRDS";
-
-      const nameInput = document.createElement("textarea");
-      nameInput.id = "VARDS";
-      nameInput.className = "input autogrow nameField";
-      nameInput.rows = 1;
-      nameInput.placeholder = "";
-      nameInput.value = String((obj && obj.VARDS != null) ? obj.VARDS : "");
-
-      nameInput.addEventListener("input", () => {
-        if (!working) return;
-        working.VARDS = nameInput.value;
-        syncDirtyForKey("VARDS");
-        try { autoGrow(nameInput); } catch(e){}
-      });
-
-      nameWrap.appendChild(nameLbl);
-      nameWrap.appendChild(nameInput);
-
-      callBtn = document.createElement("button");
-      callBtn.type = "button";
-      callBtn.className = "btn success";
-      callBtn.textContent = "ZVANĪT";
-      callBtn.disabled = true;
-
-      callBtn.addEventListener("click", () => {
-        const num = String(input.value || "").trim();
-        if (!num) return;
-        window.location.href = "tel:" + num;
-      });
-
-
-      phoneGroup.appendChild(input);
-      phoneGroup.appendChild(callBtn);
-
-      row.appendChild(phoneGroup);
-      row.appendChild(nameWrap);
-
-    }
 
     input.addEventListener("input", () => {
       if (!working) return;
-
-      if (f.key === "PIEKLUVES_KONTAKTI"){
-        const cleaned = String(input.value || "").replace(/\D+/g, "").slice(0, 12);
-        if (cleaned !== input.value) input.value = cleaned;
-        if (callBtn) callBtn.disabled = cleaned.length === 0;
-      }
-
       working[f.key] = input.value;
       syncDirtyForKey(f.key);
+      try { autoGrow(input); } catch(e){}
     });
 
     wrap.appendChild(label);
-    if (row) wrap.appendChild(row);
-    else wrap.appendChild(input);
-
+    wrap.appendChild(input);
     root.appendChild(wrap);
-  }
 
-  // Ensure autogrow applies to the newly created fields immediately
-  try{ wireAutoGrow(); }catch(e){}
+    try { autoGrow(input); } catch(e){}
+  }
 }
+
 
 // Address input (special)
 function wireAddressInput(){
@@ -446,6 +429,19 @@ function wireAddressInput(){
     markDirty("ADRESE_LOKACIJA");
   });
 }
+
+
+function wireDoorCodeInput(){
+  const inp = $("DURVJU_KODS_PIEKLUVE");
+  if (!inp) return;
+  inp.addEventListener("input", () => {
+    if (!working) return;
+    working.DURVJU_KODS_PIEKLUVE = inp.value;
+    syncDirtyForKey("DURVJU_KODS_PIEKLUVE");
+    try { autoGrow(inp); } catch(e){}
+  });
+}
+
 
 // Geocoding (Nominatim)
 async function geocodeAddress(address){

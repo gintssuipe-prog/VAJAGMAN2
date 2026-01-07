@@ -167,13 +167,7 @@ body{
 }
 
 /* System-validated address visual (ALL CAPS only for system-filled address) */
-.field.system input, .field.system textarea{
-  text-transform: uppercase;
-  font-weight: 500;
-  letter-spacing: .2px;
-}
-
-/* Mini map */
+.field.system /* Mini map */
 #miniMap{ width: calc(100% - 18px); margin: 0 auto; }
 
 .miniMapWrap{
@@ -425,4 +419,12 @@ textarea.dirty, input.dirty{ border:2px solid var(--danger); }
 /* Very narrow screens: move name below, but keep phone+call on one line */
 @media (max-width: 420px){
   .fieldRow.contactRow .nameWrap{ flex-basis: 100%; min-width: 0; }
+}
+
+
+/* System-provided address style (ONLY for address field) */
+.field.addressStandalone.system textarea{
+  text-transform: uppercase;
+  font-weight: 500;
+  letter-spacing: .2px;
 }
