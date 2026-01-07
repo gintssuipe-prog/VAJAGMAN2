@@ -13,8 +13,10 @@
   --fieldText:#0b1220;
   --dirty:#ef4444;
 
-  --control-h: 40px;
+  /* Unified control sizing (buttons + inputs) */
+  --control-h: 34px; /* keep slightly smaller than main tabs */
   --control-line: 16px;
+  --control-py: calc((var(--control-h) - var(--control-line)) / 2);
   --control-radius: 12px;
 }
 
@@ -108,7 +110,7 @@ body{
   padding: 0 12px;
   border-radius: var(--control-radius);
   font-weight: 900;
-  font-size: 15px;
+  font-size: 14px;
   line-height: var(--control-line);
   display: inline-flex;
   align-items: center;
